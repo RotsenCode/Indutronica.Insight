@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#1A2E5A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Indutronica × Adama — Mantenimiento No Invasivo</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+/* ─── CSS VARIABLES ─── */
+:root{
+  --bg:#f0f2ef;--bg2:#e8ebe6;--sur:#fff;--sur2:#f6f8f5;
+  --navy:#1A2E5A;--blue:#1E6FA8;--cyan:#00B5D8;
+  --grn:#2d6a4f;--lim:#52b788;
+  --txt:#1a1f1a;--t2:#4a5a4a;--t3:#8a9a8a;
+  --bdr:rgba(0,0,0,.08);--bdr2:rgba(0,0,0,.14);
+  --ok:#2d6a4f;--okb:#d8f3dc;
+  --wn:#b5600a;--wnb:#fff1d6;
+  --err:#9b1c1c;--errb:#fde8e8;
+  --inf:#1e6fa8;--infb:#dbeeff;
+  --ing:#6b21a8;--ingb:#f3e8ff;--ing2:#9333ea;
+  --fh:'Syne',sans-serif;--fb:'DM Sans',sans-serif;--fm:'DM Mono',monospace;
+  --r:6px;--r2:12px;--r3:18px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 4px 14px rgba(0,0,0,.05);
+  --sh2:0 6px 28px rgba(0,0,0,.13);
+  --sb:240px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:var(--fb);background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column}
+
+/* ─── LOGIN SCREEN ─── */
+.login-screen{position:fixed;inset:0;z-index:999;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0}
+.login-screen.hidden{display:none}
+.login-box{background:var(--sur);border-radius:var(--r3);width:360px;max-width:94vw;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);animation:mi .3s ease}
+.login-header{background:var(--navy);padding:28px 28px 20px;text-align:center}
+.login-brand{font-family:var(--fh);font-size:18px;font-weight:800;color:#fff;letter-spacing:2px}
+.login-brand span{color:var(--cyan)}
+.login-sub{font-family:var(--fm);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:2px;margin-top:4px}
+.login-body{padding:24px 28px 28px;display:flex;flex-direction:column;gap:18px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.role-btn{padding:14px 8px;border:2px solid var(--bdr2);border-radius:var(--r2);background:var(--sur2);cursor:pointer;text-align:center;transition:all .2s;font-family:var(--fh)}
+.role-btn:hover{border-color:var(--navy);background:var(--bg2)}
+.role-btn.selected{border-color:var(--navy);background:var(--navy);color:#fff}
+.role-btn .rb-icon{font-size:22px;margin-bottom:5px}
+.role-btn .rb-name{font-size:11px;font-weight:700;letter-spacing:.5px}
+.role-btn .rb-desc{font-size:9px;color:var(--t3);margin-top:2px;font-family:var(--fm)}
+.role-btn.selected .rb-desc{color:rgba(255,255,255,.5)}
+.pin-row{display:flex;flex-direction:column;gap:6px}
+.pin-label{font-family:var(--fm);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+.pin-input{display:flex;gap:8px;align-items:center}
+.pin-input input{flex:1;background:var(--sur2);border:1.5px solid var(--bdr2);color:var(--txt);padding:10px 14px;border-radius:var(--r2);font-family:var(--fm);font-size:20px;letter-spacing:6px;text-align:center;transition:border-color .2s}
+.pin-input input:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(26,46,90,.12)}
+.pin-err{font-family:var(--fm);font-size:10px;color:var(--err);text-align:center;min-height:16px}
+.login-btn{background:var(--navy);color:#fff;border:none;border-radius:var(--r2);padding:12px;font-family:var(--fh);font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;width:100%}
+.login-btn:hover{background:var(--blue)}
+/* Role badge in topbar */
+.role-badge{font-family:var(--fm);font-size:9px;padding:3px 9px;border-radius:20px;letter-spacing:1px;cursor:pointer;transition:all .2s;border:none}
+.role-badge.admin{background:rgba(0,181,216,.2);color:var(--cyan);border:1px solid rgba(0,181,216,.3)}
+.role-badge.tecnico{background:rgba(82,183,136,.2);color:var(--lim);border:1px solid rgba(82,183,136,.3)}
+.role-badge.lectura{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.15)}
+/* Lock overlay for readonly */
+.locked-overlay{position:absolute;inset:0;z-index:10;cursor:not-allowed}
+.action-locked{opacity:.35;pointer-events:none;cursor:not-allowed}
+
+.tb{background:var(--navy);height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.35);flex-shrink:0}
+.tb-l{display:flex;align-items:center;gap:12px}
+.tbi{font-family:var(--fh);font-size:15px;font-weight:800;color:#fff;letter-spacing:2px}
+.tbi span{color:var(--cyan)}
+.tbc{font-family:var(--fm);font-size:8px;color:rgba(255,255,255,.4);letter-spacing:1px}
+.tbdiv{width:1px;height:22px;background:rgba(255,255,255,.2);flex-shrink:0}
+.tbada{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--lim);letter-spacing:1px}
+.tbr{display:flex;align-items:center;gap:8px}
+.sdot{width:7px;height:7px;border-radius:50%;background:#555;transition:all .4s;flex-shrink:0}
+.sdot.on{background:#52b788;box-shadow:0 0 6px #52b788}
+.sdot.sy{background:#f6b042;animation:bl .5s infinite alternate}
+.sdot.er{background:#e05252}
+@keyframes bl{from{opacity:1}to{opacity:.3}}
+.slbl{font-family:var(--fm);font-size:9px;color:rgba(255,255,255,.4)}
+.msel{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;font-family:var(--fh);font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--r2);cursor:pointer}
+.msel:focus{outline:none}
+.tbtag{background:rgba(82,183,136,.2);color:var(--lim);font-family:var(--fm);font-size:9px;padding:3px 8px;border-radius:20px;border:1px solid rgba(82,183,136,.3)}
+.tbclk{font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.4)}
+
+/* ─── LAYOUT: SIDEBAR + MAIN ─── */
+.app-body{display:flex;flex:1;min-height:0}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:var(--sb);flex-shrink:0;background:var(--sur);border-right:1px solid var(--bdr2);display:flex;flex-direction:column;overflow-y:auto;position:sticky;top:52px;height:calc(100vh - 52px);box-shadow:2px 0 8px rgba(0,0,0,.04)}
+.sb-logo{padding:18px 16px 10px;border-bottom:1px solid var(--bdr)}
+.sb-logo-tag{font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.sb-logo-title{font-family:var(--fh);font-size:13px;font-weight:800;color:var(--navy);line-height:1.3}
+.sb-month{font-family:var(--fm);font-size:10px;color:var(--lim);margin-top:4px;font-weight:500}
+
+.sb-section{padding:14px 10px 4px}
+.sb-section-label{font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);padding:0 6px;margin-bottom:6px}
+
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r2);cursor:pointer;transition:all .18s;font-family:var(--fh);font-size:12px;font-weight:600;color:var(--t2);letter-spacing:.5px;border:none;background:none;width:100%;text-align:left;position:relative}
+.sb-item .si-icon{font-size:14px;width:20px;text-align:center;flex-shrink:0}
+.sb-item .si-txt{flex:1}
+.sb-item .si-badge{font-family:var(--fm);font-size:9px;background:var(--bg2);color:var(--t3);padding:1px 6px;border-radius:10px;border:1px solid var(--bdr)}
+.sb-item:hover{background:var(--sur2);color:var(--navy)}
+.sb-item.active{background:var(--navy);color:#fff}
+.sb-item.active .si-badge{background:rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.2)}
+.sb-item.inst-active{background:var(--okb);color:var(--ok)}
+.sb-item.inst-active .si-badge{background:rgba(45,106,79,.15);color:var(--ok);border-color:rgba(45,106,79,.2)}
+.sb-item.ing-active{background:var(--ingb);color:var(--ing)}
+.sb-item.ing-active .si-badge{background:rgba(107,33,168,.15);color:var(--ing);border-color:rgba(107,33,168,.2)}
+
+.sb-divider{margin:6px 16px;border:none;border-top:1px solid var(--bdr)}
+.sb-status{padding:10px 16px;margin-top:auto;border-top:1px solid var(--bdr);font-family:var(--fm);font-size:9px;color:var(--t3);display:flex;align-items:center;gap:6px}
+
+/* ─── MAIN CONTENT ─── */
+.main{flex:1;min-width:0;overflow-y:auto}
+.view{display:none}.view.active{display:block}
+
+/* ─── PAGE HEADER ─── */
+.ph{padding:18px 24px 0}
+.ph-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+.ph-tag{font-family:var(--fm);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--t3)}
+.ph-title{font-family:var(--fh);font-size:22px;font-weight:800;color:var(--navy);line-height:1.2}
+.ph-title span{color:var(--lim)}
+.ph-title.ing span{color:var(--ing2)}
+.ph-sub{font-family:var(--fm);font-size:10px;color:var(--t3);margin-top:2px;letter-spacing:.5px}
+.ph-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:flex-start;padding-top:2px}
+
+/* ─── CARDS / DC ─── */
+.dc{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;box-shadow:var(--sh)}
+.dct{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* ─── DASHBOARD ─── */
+.dash-wrap{padding:16px 24px;display:flex;flex-direction:column;gap:16px}
+.krow{display:flex;gap:10px;flex-wrap:wrap}
+.kc{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 16px;min-width:110px;box-shadow:var(--sh)}
+.kl{font-family:var(--fm);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.kv{font-family:var(--fh);font-size:26px;font-weight:800;color:var(--txt);line-height:1;margin-bottom:2px}
+.ks2{font-family:var(--fm);font-size:9px;color:var(--t3)}
+.dr2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.dr2{grid-template-columns:1fr}}
+
+/* ─── GAUGE ─── */
+.gauge-block{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);padding:16px;box-shadow:var(--sh)}
+.gauge-block-title{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.gauge-block-title .gbt-pill{font-family:var(--fm);font-size:9px;padding:2px 8px;border-radius:10px}
+.gpair{display:flex;justify-content:space-around;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.gwrap{display:flex;flex-direction:column;align-items:center;gap:2px}
+.gnm{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--navy)}
+.gsub{font-family:var(--fm);font-size:9px;color:var(--t3);text-align:center;margin-bottom:4px}
+.gbv{font-family:var(--fh);font-size:28px;font-weight:800;color:var(--navy);margin-top:2px}
+.gdl{font-family:var(--fm);font-size:10px;color:var(--ok)}
+.gdl.ing-color{color:var(--ing2)}
+
+/* ─── DASHBOARD ING METRICS ─── */
+.ing-metrics{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.im-card{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 16px;flex:1;min-width:100px;text-align:center}
+.im-v{font-family:var(--fh);font-size:24px;font-weight:800;color:var(--ing);line-height:1}
+.im-l{font-family:var(--fm);font-size:9px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+/* ─── PROGRESS TABLE ─── */
+.ptbl{width:100%;border-collapse:collapse;font-size:11px}
+.ptbl th{padding:7px 9px;text-align:left;font-family:var(--fm);font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--bdr2);background:var(--sur2)}
+.ptbl td{padding:6px 9px;border-bottom:1px solid rgba(0,0,0,.04);vertical-align:middle}
+.ptbl tr:hover td{background:var(--sur2)}
+.mbw{width:80px;background:var(--bg2);border-radius:10px;height:5px;display:inline-block;vertical-align:middle;overflow:hidden}
+.mb{height:100%;border-radius:10px;transition:width .4s}
+.pl{font-family:var(--fm);font-size:9px;color:var(--t3);margin-left:5px}
+
+/* ─── KANBAN ─── */
+.kan-wrap{display:flex;flex-direction:column;gap:0}
+.ktop{padding:14px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.ktit{font-family:var(--fh);font-size:20px;font-weight:800;color:var(--navy)}
+.ksub{font-family:var(--fm);font-size:9px;color:var(--t3);letter-spacing:1px;margin-top:2px;text-transform:uppercase}
+.kctrl{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.fgrp{display:flex;gap:4px;flex-wrap:wrap}
+.fb{padding:4px 10px;border:1px solid var(--bdr2);background:var(--sur);color:var(--t2);border-radius:20px;font-size:10px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--fb)}
+.fb:hover{border-color:var(--grn);color:var(--grn)}.fb.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.badd{padding:7px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--r2);font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.badd:hover{background:var(--blue);transform:translateY(-1px);box-shadow:var(--sh2)}
+.badd.ing-btn{background:var(--ing)}
+.badd.ing-btn:hover{background:var(--ing2)}
+.pgw{padding:8px 24px 0;display:flex;align-items:center;gap:10px}
+.pgbw{flex:1;background:var(--bg2);border-radius:10px;height:5px;overflow:hidden;border:1px solid var(--bdr)}
+.pgbf{height:100%;background:linear-gradient(90deg,var(--lim),var(--grn));border-radius:10px;transition:width .6s}
+.pgbf.ing{background:linear-gradient(90deg,var(--ing),var(--ing2))}
+.kst{display:flex;gap:6px;padding:6px 24px 0;flex-wrap:wrap}
+.ksi{display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;border:1px solid var(--bdr);background:var(--sur);font-family:var(--fm);font-size:10px}
+.ksd{width:6px;height:6px;border-radius:50%}
+.board{display:flex;gap:12px;padding:12px 24px 32px;overflow-x:auto;align-items:flex-start}
+.board::-webkit-scrollbar{height:5px}.board::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+.kcol{min-width:256px;max-width:272px;flex-shrink:0;display:flex;flex-direction:column}
+.kch{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--sur);border:1px solid var(--bdr);border-bottom:none;border-radius:var(--r2) var(--r2) 0 0}
+.kct{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:6px;color:var(--t2)}
+.kcd{width:10px;height:10px;border-radius:2px}
+.kcc{font-family:var(--fm);font-size:10px;background:var(--bg2);color:var(--t2);padding:2px 7px;border-radius:10px;border:1px solid var(--bdr)}
+.kcb{background:var(--bg2);border:1px solid var(--bdr);border-radius:0 0 var(--r2) var(--r2);padding:7px;display:flex;flex-direction:column;gap:7px;min-height:80px}
+.kcb.dov{background:var(--infb);border-color:var(--cyan);border-style:dashed}
+/* Card */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;cursor:grab;transition:all .2s;box-shadow:var(--sh)}
+.card:hover{box-shadow:var(--sh2);transform:translateY(-1px)}.card.dragging{opacity:.38;cursor:grabbing}
+.cstripe{height:4px;width:100%}
+.cbd{padding:10px 12px}
+.ctop{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:6px}
+.can{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--navy);line-height:1.2;flex:1}
+.cmb{font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:20px;background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.2);white-space:nowrap}
+.ccounts{display:flex;gap:7px;margin-bottom:7px;flex-wrap:wrap}
+.cpill{display:flex;align-items:center;gap:3px;font-family:var(--fm);font-size:10px;padding:2px 8px;border-radius:20px}
+.cpa{background:rgba(30,111,168,.08);color:var(--inf);border:1px solid rgba(30,111,168,.2)}
+.cpi{background:rgba(45,106,79,.08);color:var(--grn);border:1px solid rgba(45,106,79,.2)}
+.cing{background:rgba(107,33,168,.08);color:var(--ing);border:1px solid rgba(107,33,168,.2)}
+.cprog{margin-bottom:7px}
+.cpl{display:flex;justify-content:space-between;font-family:var(--fm);font-size:9px;color:var(--t3);margin-bottom:3px}
+.cpw{background:var(--bg2);border-radius:10px;height:5px;overflow:hidden}
+.cpf{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--lim),var(--grn));transition:width .4s}
+.cpf.ing{background:linear-gradient(90deg,var(--ing),var(--ing2))}
+.chl{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.hbdg{font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:20px;background:var(--errb);color:var(--err);border:1px solid rgba(155,28,28,.2)}
+.cdt{font-family:var(--fm);font-size:9px;color:var(--t3);margin-bottom:6px}
+.cfoot{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid var(--bdr)}
+.cacts{display:flex;gap:3px}
+.cbtn{width:22px;height:22px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--sur2);color:var(--t2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.cbtn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}.cbtn.d:hover{background:var(--err);color:#fff;border-color:var(--err)}
+.sbdg{font-family:var(--fm);font-size:9px;padding:2px 8px;border-radius:20px}
+.sP{background:var(--bg2);color:var(--t3);border:1px solid var(--bdr2)}
+.sE{background:var(--wnb);color:var(--wn);border:1px solid rgba(181,96,10,.3)}
+.sV{background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.3)}
+.sC{background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.3)}
+.sH{background:var(--errb);color:var(--err);border:1px solid rgba(155,28,28,.3)}
+.ecol{text-align:center;padding:18px 8px;color:var(--t3);font-size:10px;border:1px dashed var(--bdr2);border-radius:var(--r2);background:rgba(255,255,255,.5)}
+
+/* ─── HALLAZGOS ─── */
+.rhdr{padding:16px 24px;border-bottom:1px solid var(--bdr);background:var(--sur);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;box-shadow:var(--sh)}
+.rtit{font-family:var(--fh);font-size:20px;font-weight:800;color:var(--navy)}
+.rtit span{color:var(--grn)}
+.rtit span.ing{color:var(--ing2)}
+.hallbody-wrap{padding:16px 24px}
+.rhgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.rhc{background:var(--sur);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
+.rhch{padding:9px 12px;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.rhca{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--navy)}
+.rhcm{font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:1px}
+.rhcb{padding:10px 12px;font-size:12px;color:var(--t2);line-height:1.6}
+
+/* ─── REPORTE ─── */
+.rbody{padding:16px 24px;display:flex;flex-direction:column;gap:16px}
+.rcov{background:var(--navy);border-radius:var(--r2);padding:24px 28px;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.rce{font-family:var(--fm);font-size:9px;color:var(--lim);letter-spacing:2px;margin-bottom:5px}
+.rct{font-family:var(--fh);font-size:20px;font-weight:800;color:#fff}
+.rcsu{font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.5);margin-top:2px}
+.rcmo{font-family:var(--fh);font-size:16px;font-weight:700;color:var(--cyan);margin-top:8px}
+.rcp{font-family:var(--fh);font-size:38px;font-weight:800;color:var(--lim);line-height:1}
+.rcpl{font-family:var(--fm);font-size:9px;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase}
+.rcst{font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.8;text-align:right}
+.rtbl{width:100%;border-collapse:collapse;font-size:11px}
+.rtbl th{padding:7px 9px;text-align:left;font-family:var(--fm);font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--t3);border-bottom:2px solid var(--bdr2);background:var(--sur2)}
+.rtbl td{padding:7px 9px;border-bottom:1px solid var(--bdr);vertical-align:middle}
+.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:600px){.fgrid{grid-template-columns:1fr}}
+.fbox{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:13px}
+.frole{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.fline{font-size:10px;color:var(--t3);margin-top:6px}
+
+/* ─── ATENCIONES LLAMADO ─── */
+.aten-wrap{padding:0}
+.aten-list{padding:16px 24px;display:flex;flex-direction:column;gap:10px}
+.aten-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
+.aten-stripe{height:4px}
+.aten-body{padding:12px 14px}
+.aten-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.aten-num{font-family:var(--fm);font-size:10px;color:var(--t3)}
+.aten-fecha{font-family:var(--fm);font-size:10px;color:var(--t3)}
+.aten-desc{font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:6px}
+.aten-meta{display:flex;gap:8px;flex-wrap:wrap}
+.aten-pill{font-family:var(--fm);font-size:9px;padding:2px 8px;border-radius:20px}
+.aten-ok{background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.2)}
+.aten-warn{background:var(--errb);color:var(--err);border:1px solid rgba(155,28,28,.2)}
+.aten-sys{background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)}
+.aten-empty{text-align:center;padding:48px 24px;color:var(--t3)}
+.aten-empty-icon{font-size:36px;margin-bottom:8px}
+.aten-empty-txt{font-family:var(--fh);font-size:14px;font-weight:700;color:var(--t3)}
+
+/* ─── MODAL ─── */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.38);backdrop-filter:blur(3px);z-index:400;align-items:center;justify-content:center}
+.mov.open{display:flex}
+.mdl{background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r3);width:560px;max-width:96vw;max-height:93vh;overflow-y:auto;box-shadow:var(--sh2);animation:mi .2s ease}
+.mdl.wide{width:680px}
+@keyframes mi{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhdr{padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;background:var(--sur2);border-radius:var(--r3) var(--r3) 0 0}
+.mtit{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--navy)}
+.mclose{width:28px;height:28px;background:none;border:1px solid var(--bdr);border-radius:var(--r);color:var(--t2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.mclose:hover{background:var(--errb);color:var(--err);border-color:var(--err)}
+.mbody{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-family:var(--fm);font-size:9px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+.fi,.fs,.fta{background:var(--sur2);border:1px solid var(--bdr2);color:var(--txt);padding:8px 10px;border-radius:var(--r2);font-family:var(--fb);font-size:13px;width:100%;transition:border-color .2s}
+.fi:focus,.fs:focus,.fta:focus{outline:none;border-color:var(--grn);box-shadow:0 0 0 3px rgba(45,106,79,.1)}
+.fta{resize:vertical;min-height:70px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.mftr{padding:12px 18px;border-top:1px solid var(--bdr);display:flex;justify-content:flex-end;gap:8px}
+.btn{padding:8px 16px;border-radius:var(--r2);font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;border:none}
+.btp{background:var(--navy);color:#fff}.btp:hover{background:var(--blue)}
+.bts{background:transparent;color:var(--t2);border:1px solid var(--bdr2)}.bts:hover{border-color:var(--txt);color:var(--txt)}
+.btd{background:var(--err);color:#fff}
+.btg{background:var(--grn);color:#fff}.btg:hover{background:#1e5235}
+.bting{background:var(--ing);color:#fff}.bting:hover{background:var(--ing2)}
+
+/* Hallazgo list in modal */
+.hlist{display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto}
+.hitem{background:var(--sur2);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.hitm{flex:1}
+.httag{font-family:var(--fm);font-size:11px;font-weight:500;color:var(--navy)}
+.htdesc{font-size:11px;color:var(--t2);line-height:1.4;margin-top:1px}
+.htrec{font-size:10px;color:var(--grn);margin-top:2px}
+.htmet{font-family:var(--fm);font-size:9px;color:var(--t3);margin-top:2px}
+.hdel{width:20px;height:20px;background:none;border:1px solid var(--bdr);border-radius:4px;cursor:pointer;color:var(--t3);font-size:10px;flex-shrink:0;transition:all .2s}
+.hdel:hover{background:var(--errb);color:var(--err);border-color:var(--err)}
+.ahbox{background:var(--sur2);border:1px solid var(--bdr2);border-radius:var(--r2);padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.ahtit{font-family:var(--fm);font-size:9px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
+
+/* ─── SECTION SEPARATOR IN DASH ─── */
+.dash-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.dash-section-head .dsh-line{flex:1;height:1px;background:var(--bdr2)}
+.dash-section-head .dsh-label{font-family:var(--fm);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:20px;white-space:nowrap}
+.dsh-label.inst{background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.2)}
+.dsh-label.ing{background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+
+/* ─── PRINT ─── */
+@media print{.sidebar,.tb,.ph-actions,.no-print{display:none!important}.rbody{padding:0}.rcov{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyAbHGNKh1UyTW8wf3VguhKGZy2P37phHiI",
+  authDomain:"indutronica-mantenimiento.firebaseapp.com",
+  databaseURL:"https://indutronica-mantenimiento-default-rtdb.firebaseio.com",
+  projectId:"indutronica-mantenimiento",
+  storageBucket:"indutronica-mantenimiento.firebasestorage.app",
+  messagingSenderId:"1677628199",
+  appId:"1:1677628199:web:a5e6596f1ab2b697ff4f02"
+});
+const db = firebase.database();
+</script>
+
+<!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-header">
+      <div class="login-brand">>><span> INDUTRONICA</span> × ADAMA</div>
+      <div class="login-sub">Sistema de Mantenimiento No Invasivo</div>
+    </div>
+    <div class="login-body">
+      <div>
+        <div class="pin-label" style="margin-bottom:10px">Selecciona tu rol</div>
+        <div class="role-grid">
+          <div class="role-btn" id="rb-admin" onclick="selectRole('admin')">
+            <div class="rb-icon">🛡️</div>
+            <div class="rb-name">Admin</div>
+            <div class="rb-desc">Acceso total</div>
+          </div>
+          <div class="role-btn" id="rb-tecnico" onclick="selectRole('tecnico')">
+            <div class="rb-icon">🔧</div>
+            <div class="rb-name">Técnico</div>
+            <div class="rb-desc">Crear / editar</div>
+          </div>
+          <div class="role-btn selected" id="rb-lectura" onclick="selectRole('lectura')">
+            <div class="rb-icon">👁️</div>
+            <div class="rb-name">Solo Lectura</div>
+            <div class="rb-desc">Ver dashboard</div>
+          </div>
+        </div>
+      </div>
+      <div class="pin-row" id="pin-row" style="display:none">
+        <div class="pin-label">Ingresa el PIN</div>
+        <div class="pin-input">
+          <input type="password" id="pin-input" maxlength="4" inputmode="numeric" placeholder="• • • •" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+      </div>
+      <div class="pin-err" id="pin-err"></div>
+      <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ TOPBAR ═══════════════ -->
+<div class="tb">
+  <div class="tb-l">
+    <div style="display:flex;flex-direction:column">
+      <div class="tbi">>><span> INDUTRONICA</span></div>
+      <div class="tbc">Contrato Adama · Administración y Soporte</div>
+    </div>
+    <div class="tbdiv"></div>
+    <div class="tbada">× ADAMA</div>
+  </div>
+  <div style="font-family:var(--fh);font-size:12px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase">Mantenimiento No Invasivo</div>
+  <div class="tbr">
+    <div style="display:flex;align-items:center;gap:5px">
+      <div id="sdot" class="sdot"></div>
+      <span id="slbl" class="slbl">Conectando…</span>
+    </div>
+    <select id="msel" class="msel" onchange="chMonth(this.value)"></select>
+    <div class="tbtag">MENSUAL</div>
+    <button class="role-badge" id="role-badge" onclick="showLogin()" title="Cambiar rol">—</button>
+    <div id="clock" class="tbclk"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ LAYOUT ═══════════════ -->
+<div class="app-body">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-tag">Sistema de Gestión</div>
+      <div class="sb-logo-title">Mantenimiento<br>No Invasivo</div>
+      <div class="sb-month" id="sb-month-lbl">—</div>
+    </div>
+
+    <!-- Dashboard general -->
+    <div class="sb-section">
+      <div class="sb-section-label">General</div>
+      <button class="sb-item active" id="sbi-dash" onclick="sw('dash')">
+        <span class="si-icon">◉</span>
+        <span class="si-txt">KPI Dashboard</span>
+      </button>
+    </div>
+
+    <hr class="sb-divider">
+
+    <!-- Instrumentación -->
+    <div class="sb-section">
+      <div class="sb-section-label">🔧 Instrumentación</div>
+      <button class="sb-item" id="sbi-inst-kanban" onclick="sw('inst-kanban')">
+        <span class="si-icon">▦</span>
+        <span class="si-txt">Kanban</span>
+        <span class="si-badge" id="sb-inst-k-cnt">—</span>
+      </button>
+      <button class="sb-item" id="sbi-inst-hall" onclick="sw('inst-hall')">
+        <span class="si-icon">△</span>
+        <span class="si-txt">Hallazgos</span>
+        <span class="si-badge" id="sb-inst-h-cnt">—</span>
+      </button>
+      <button class="sb-item" id="sbi-inst-rep" onclick="sw('inst-rep')">
+        <span class="si-icon">⎙</span>
+        <span class="si-txt">Reporte Mensual</span>
+      </button>
+    </div>
+
+    <hr class="sb-divider">
+
+    <!-- Ingeniería -->
+    <div class="sb-section">
+      <div class="sb-section-label">⚙️ Ingeniería</div>
+      <button class="sb-item" id="sbi-ing-kanban" onclick="sw('ing-kanban')">
+        <span class="si-icon">▦</span>
+        <span class="si-txt">Kanban</span>
+        <span class="si-badge" id="sb-ing-k-cnt">—</span>
+      </button>
+      <button class="sb-item" id="sbi-ing-hall" onclick="sw('ing-hall')">
+        <span class="si-icon">△</span>
+        <span class="si-txt">Hallazgos</span>
+        <span class="si-badge" id="sb-ing-h-cnt">—</span>
+      </button>
+      <button class="sb-item" id="sbi-ing-rep" onclick="sw('ing-rep')">
+        <span class="si-icon">⎙</span>
+        <span class="si-txt">Reporte Mensual</span>
+      </button>
+      <button class="sb-item" id="sbi-ing-aten" onclick="sw('ing-aten')">
+        <span class="si-icon">📞</span>
+        <span class="si-txt">Atenciones Llamado</span>
+        <span class="si-badge" id="sb-ing-a-cnt">—</span>
+      </button>
+    </div>
+
+    <div class="sb-status">
+      <div id="sdot2" class="sdot"></div>
+      <span id="slbl2">Firebase</span>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- ══════ DASHBOARD GENERAL ══════ -->
+    <div class="view active" id="view-dash">
+      <div class="dash-wrap">
+
+        <!-- KPIs rápidos Instrumentación -->
+        <div class="dash-section-head">
+          <span class="dsh-label inst">🔧 Instrumentación</span>
+          <div class="dsh-line"></div>
+        </div>
+        <div class="krow" id="dash-inst-kpis"></div>
+
+        <div class="dr2">
+          <div class="gauge-block">
+            <div class="gauge-block-title">
+              Actuadores
+              <span class="gbt-pill" style="background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.2)">No Invasivos</span>
+            </div>
+            <div class="gpair">
+              <div class="gwrap">
+                <div class="gsub" id="gsuba-dash">Verificados este mes</div>
+                <canvas id="cva-dash" width="200" height="120"></canvas>
+                <div class="gbv" id="gbv-act-dash">0</div>
+                <div class="gdl" id="gda-dash">— / 200</div>
+              </div>
+            </div>
+          </div>
+          <div class="gauge-block">
+            <div class="gauge-block-title">
+              Instrumentos
+              <span class="gbt-pill" style="background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.2)">No Invasivos</span>
+            </div>
+            <div class="gpair">
+              <div class="gwrap">
+                <div class="gsub" id="gsubi-dash">Verificados este mes</div>
+                <canvas id="cvi-dash" width="200" height="120"></canvas>
+                <div class="gbv" id="gbv-ins-dash">0</div>
+                <div class="gdl" id="gdi-dash">— / 145</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla progreso inst -->
+        <div class="dc">
+          <div class="dct">
+            <span>Progreso por Área — <span id="dash-month-lbl"></span></span>
+            <button class="badd no-print" style="font-size:10px;padding:5px 12px" onclick="sw('inst-kanban')">Ver Kanban →</button>
+          </div>
+          <div style="overflow-x:auto"><table class="ptbl" id="dash-ptbl"></table></div>
+        </div>
+
+        <!-- KPIs Ingeniería -->
+        <div class="dash-section-head" style="margin-top:8px">
+          <span class="dsh-label ing">⚙️ Ingeniería</span>
+          <div class="dsh-line"></div>
+        </div>
+        <div class="krow" id="dash-ing-kpis"></div>
+
+        <!-- 3 gauges Ingeniería -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <div class="gauge-block">
+            <div class="gauge-block-title">
+              Simatic Batch
+              <span class="gbt-pill" style="background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)">Ítems</span>
+            </div>
+            <div class="gpair">
+              <div class="gwrap">
+                <div class="gsub">Ítems completados</div>
+                <canvas id="cvb-dash" width="180" height="108"></canvas>
+                <div class="gbv" id="gbv-batch-dash">0</div>
+                <div class="gdl ing-color" id="gdb-dash">de 3 líneas</div>
+              </div>
+            </div>
+          </div>
+          <div class="gauge-block">
+            <div class="gauge-block-title">
+              Servidores
+              <span class="gbt-pill" style="background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.2)">Estado</span>
+            </div>
+            <div class="gpair">
+              <div class="gwrap">
+                <div class="gsub">Revisiones completadas</div>
+                <canvas id="cvs-dash" width="180" height="108"></canvas>
+                <div class="gbv" id="gbv-srv-dash">0</div>
+                <div class="gdl" id="gds-dash">de 5 servidores</div>
+              </div>
+            </div>
+          </div>
+          <div class="gauge-block">
+            <div class="gauge-block-title">
+              Backups
+              <span class="gbt-pill" style="background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.2)">Estado</span>
+            </div>
+            <div class="gpair">
+              <div class="gwrap">
+                <div class="gsub">Backups completados</div>
+                <canvas id="cvk-dash" width="180" height="108"></canvas>
+                <div class="gbv" id="gbv-bkp-dash">0</div>
+                <div class="gdl" id="gdk-dash">de 4 backups</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla progreso Ingeniería -->
+        <div class="dc">
+          <div class="dct">
+            <span>Progreso Ingeniería — <span id="dash-ing-month-lbl"></span></span>
+            <button class="badd ing-btn no-print" style="font-size:10px;padding:5px 12px" onclick="sw('ing-kanban')">Ver Kanban →</button>
+          </div>
+          <div style="overflow-x:auto"><table class="ptbl" id="dash-ing-ptbl"></table></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════ INST KANBAN ══════ -->
+    <div class="view" id="view-inst-kanban">
+      <div class="ktop">
+        <div>
+          <div class="ktit">Tablero Mensual — Instrumentación</div>
+          <div class="ksub" id="inst-k-sub">mes activo</div>
+        </div>
+        <div class="kctrl">
+          <div class="fgrp" id="inst-kflt">
+            <button class="fb on" data-f="ALL" onclick="instKF(this,'ALL')">Todas</button>
+            <button class="fb" data-f="HSC"  onclick="instKF(this,'HSC')">Herbicidas SC</button>
+            <button class="fb" data-f="PARQ" onclick="instKF(this,'PARQ')">Parque Solv.</button>
+            <button class="fb" data-f="REAC" onclick="instKF(this,'REAC')">Reactores</button>
+            <button class="fb" data-f="FORM" onclick="instKF(this,'FORM')">Formuladores</button>
+            <button class="fb" data-f="UTIL" onclick="instKF(this,'UTIL')">Utilidades</button>
+          </div>
+          <button class="badd write-action" onclick="oInstAC(null)">✎ Registrar Ejecución</button>
+        </div>
+      </div>
+      <div class="pgw"><div class="pgbw"><div class="pgbf" id="inst-pgf" style="width:0%"></div></div><span style="font-family:var(--fm);font-size:11px;color:var(--grn);font-weight:500;min-width:36px" id="inst-pgct">0%</span></div>
+      <div class="kst" id="inst-kstr"></div>
+      <div class="board">
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#94a3b8"></div>Programado</div><div class="kcc" id="inst-cnP">0</div></div><div class="kcb" id="inst-bP" ondragover="dov(event)" ondrop="instDp(event,'P')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#f6b042"></div>En Ejecución</div><div class="kcc" id="inst-cnE">0</div></div><div class="kcb" id="inst-bE" ondragover="dov(event)" ondrop="instDp(event,'E')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#00B5D8"></div>Verif. PCS7</div><div class="kcc" id="inst-cnV">0</div></div><div class="kcb" id="inst-bV" ondragover="dov(event)" ondrop="instDp(event,'V')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#2d6a4f"></div>Completado</div><div class="kcc" id="inst-cnC">0</div></div><div class="kcb" id="inst-bC" ondragover="dov(event)" ondrop="instDp(event,'C')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#9b1c1c"></div>Con Hallazgo</div><div class="kcc" id="inst-cnH">0</div></div><div class="kcb" id="inst-bH" ondragover="dov(event)" ondrop="instDp(event,'H')" ondragleave="dlv(event)"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════ INST HALLAZGOS ══════ -->
+    <div class="view" id="view-inst-hall">
+      <div class="rhdr">
+        <div class="rtit">Hallazgos — <span>Instrumentación</span></div>
+        <button class="badd no-print write-action" onclick="oInstHQ()">+ Hallazgo Rápido</button>
+      </div>
+      <div class="hallbody-wrap" id="inst-hallbody"></div>
+    </div>
+
+    <!-- ══════ INST REPORTE ══════ -->
+    <div class="view" id="view-inst-rep">
+      <div class="rhdr">
+        <div class="rtit">Reporte <span>Mensual — Instrumentación</span></div>
+        <div class="no-print" style="display:flex;gap:8px">
+          <button class="btn bts" onclick="expInstHTML()">↓ Exportar HTML</button>
+          <button class="btn btg" onclick="window.print()">⎙ Imprimir / PDF</button>
+        </div>
+      </div>
+      <div class="rbody" id="inst-repcont"></div>
+    </div>
+
+    <!-- ══════ ING KANBAN ══════ -->
+    <div class="view" id="view-ing-kanban">
+      <div class="ktop">
+        <div>
+          <div class="ktit" style="color:var(--ing)">Tablero Mensual — Ingeniería</div>
+          <div class="ksub" id="ing-k-sub">mes activo</div>
+        </div>
+        <div class="kctrl">
+          <div class="fgrp" id="ing-kflt">
+            <button class="fb on" data-f="ALL" onclick="ingKF(this,'ALL')">Todos</button>
+            <button class="fb" data-f="BATCH" onclick="ingKF(this,'BATCH')">Simatic Batch</button>
+            <button class="fb" data-f="SRV"   onclick="ingKF(this,'SRV')">Servidores</button>
+            <button class="fb" data-f="BKP"   onclick="ingKF(this,'BKP')">Backups</button>
+          </div>
+          <button class="badd ing-btn write-action" onclick="oIngAC(null)">✎ Registrar Avance</button>
+        </div>
+      </div>
+      <div class="pgw"><div class="pgbw"><div class="pgbf ing" id="ing-pgf" style="width:0%"></div></div><span style="font-family:var(--fm);font-size:11px;color:var(--ing);font-weight:500;min-width:36px" id="ing-pgct">0%</span></div>
+      <div class="kst" id="ing-kstr"></div>
+      <div class="board">
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#94a3b8"></div>Programado</div><div class="kcc" id="ing-cnP">0</div></div><div class="kcb" id="ing-bP" ondragover="dov(event)" ondrop="ingDp(event,'P')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#f6b042"></div>En Ejecución</div><div class="kcc" id="ing-cnE">0</div></div><div class="kcb" id="ing-bE" ondragover="dov(event)" ondrop="ingDp(event,'E')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#9333ea"></div>En Revisión</div><div class="kcc" id="ing-cnV">0</div></div><div class="kcb" id="ing-bV" ondragover="dov(event)" ondrop="ingDp(event,'V')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#2d6a4f"></div>Completado</div><div class="kcc" id="ing-cnC">0</div></div><div class="kcb" id="ing-bC" ondragover="dov(event)" ondrop="ingDp(event,'C')" ondragleave="dlv(event)"></div></div>
+        <div class="kcol"><div class="kch"><div class="kct"><div class="kcd" style="background:#9b1c1c"></div>Con Hallazgo</div><div class="kcc" id="ing-cnH">0</div></div><div class="kcb" id="ing-bH" ondragover="dov(event)" ondrop="ingDp(event,'H')" ondragleave="dlv(event)"></div></div>
+      </div>
+    </div>
+
+    <!-- ══════ ING HALLAZGOS ══════ -->
+    <div class="view" id="view-ing-hall">
+      <div class="rhdr">
+        <div class="rtit">Hallazgos — <span class="ing">Ingeniería</span></div>
+        <button class="badd ing-btn no-print write-action" onclick="oIngHQ()">+ Hallazgo Rápido</button>
+      </div>
+      <div class="hallbody-wrap" id="ing-hallbody"></div>
+    </div>
+
+    <!-- ══════ ING REPORTE ══════ -->
+    <div class="view" id="view-ing-rep">
+      <div class="rhdr">
+        <div class="rtit">Reporte <span class="ing">Mensual — Ingeniería</span></div>
+        <div class="no-print" style="display:flex;gap:8px">
+          <button class="btn bts" onclick="expIngHTML()">↓ Exportar HTML</button>
+          <button class="btn bting" onclick="window.print()">⎙ Imprimir / PDF</button>
+        </div>
+      </div>
+      <div class="rbody" id="ing-repcont"></div>
+    </div>
+
+    <!-- ══════ ING ATENCIONES ══════ -->
+    <div class="view" id="view-ing-aten">
+      <div class="rhdr">
+        <div class="rtit">Atenciones de <span class="ing">Llamado</span></div>
+        <button class="badd ing-btn no-print write-action" onclick="oAtenModal()">+ Nueva Atención</button>
+      </div>
+      <div class="aten-wrap">
+        <!-- Stats row -->
+        <div style="padding:12px 24px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--bdr)">
+          <div class="kc" style="min-width:90px">
+            <div class="kl">Total</div>
+            <div class="kv" id="aten-tot">0</div>
+            <div class="ks2">este mes</div>
+          </div>
+          <div class="kc" style="min-width:90px">
+            <div class="kl">&lt;2 h</div>
+            <div class="kv" style="color:var(--ok)" id="aten-ok">0</div>
+            <div class="ks2">a tiempo</div>
+          </div>
+          <div class="kc" style="min-width:90px">
+            <div class="kl">&gt;2 h</div>
+            <div class="kv" style="color:var(--err)" id="aten-late">0</div>
+            <div class="ks2">demoradas</div>
+          </div>
+          <div class="kc" style="min-width:90px">
+            <div class="kl">Prom. respuesta</div>
+            <div class="kv" style="color:var(--ing)" id="aten-avg">—</div>
+            <div class="ks2">minutos</div>
+          </div>
+        </div>
+        <div class="aten-list" id="aten-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═════ MODAL: INST EJECUCIÓN ═════ -->
+<div class="mov" id="mc-inst">
+  <div class="mdl wide">
+    <div class="mhdr"><div class="mtit" id="mc-inst-tit">Registrar Ejecución — Instrumentación</div><button class="mclose" onclick="cm('mc-inst')">✕</button></div>
+    <div class="mbody">
+      <div class="f2">
+        <div class="fg"><label class="fl">Área</label><select class="fs" id="inst-fa" onchange="onInstASel()"><option value="">— Seleccionar área —</option></select></div>
+        <div class="fg"><label class="fl">Estado</label><select class="fs" id="inst-fst"><option value="P">Programado</option><option value="E">En Ejecución</option><option value="V">Verificación PCS7</option><option value="C">Completado ✓</option><option value="H">Con Hallazgo</option></select></div>
+      </div>
+      <div class="f3">
+        <div class="fg"><label class="fl">Actuadores total</label><input class="fi" id="inst-fna" readonly style="background:var(--bg2);color:var(--t3)"></div>
+        <div class="fg"><label class="fl">Instrumentos total</label><input class="fi" id="inst-fni" readonly style="background:var(--bg2);color:var(--t3)"></div>
+        <div class="fg"><label class="fl">% Ejecutado</label><input class="fi" type="number" id="inst-fpct" min="0" max="100" value="0"></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Fecha ejecución</label><input class="fi" type="date" id="inst-ffec"></div>
+        <div class="fg"><label class="fl">Técnico / Ingeniero</label><input class="fi" id="inst-ftec" placeholder="Nombre del responsable"></div>
+      </div>
+      <div class="fg"><label class="fl">Observaciones</label><textarea class="fta" id="inst-fobs" placeholder="Condiciones encontradas, novedades…"></textarea></div>
+      <div class="fg">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><label class="fl">Hallazgos encontrados</label></div>
+        <div class="hlist" id="inst-hlistm"></div>
+        <div class="ahbox">
+          <div class="ahtit">+ Agregar hallazgo</div>
+          <div class="f2">
+            <div class="fg"><label class="fl">TAG / Equipo</label><input class="fi" id="inst-htag" placeholder="ej. ACT-101, FS-201…"></div>
+            <div class="fg"><label class="fl">Tipo</label><select class="fs" id="inst-htipo"><option value="Actuador">Actuador</option><option value="Instrumento">Instrumento</option></select></div>
+          </div>
+          <div class="fg"><label class="fl">Descripción</label><input class="fi" id="inst-hdesc" placeholder="Estado encontrado…"></div>
+          <div class="f2">
+            <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="inst-hprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+            <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="inst-hrec" placeholder="Acción recomendada…"></div>
+          </div>
+          <button class="btn bts" style="align-self:flex-end" onclick="addInstHI()">Agregar Hallazgo</button>
+        </div>
+      </div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mc-inst')">Cancelar</button><button class="btn btp write-action" onclick="saveInstC()">Guardar Ejecución</button></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL: INST HALLAZGO RÁPIDO ═════ -->
+<div class="mov" id="mhq-inst">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtit">△ Hallazgo Rápido — Instrumentación</div><button class="mclose" onclick="cm('mhq-inst')">✕</button></div>
+    <div class="mbody">
+      <div class="f2">
+        <div class="fg"><label class="fl">TAG / Equipo</label><input class="fi" id="inst-rhtag" placeholder="ej. ACT-301"></div>
+        <div class="fg"><label class="fl">Área</label><select class="fs" id="inst-rharea"><option value="">— Seleccionar —</option></select></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Tipo</label><select class="fs" id="inst-rhtipo"><option value="Actuador">Actuador</option><option value="Instrumento">Instrumento</option></select></div>
+        <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="inst-rhprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="inst-rhdesc" placeholder="Descripción del hallazgo…"></textarea></div>
+      <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="inst-rhrec" placeholder="Acción recomendada…"></div>
+      <div class="fg"><label class="fl">Técnico que reporta</label><input class="fi" id="inst-rhtec" placeholder="Nombre"></div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mhq-inst')">Cancelar</button><button class="btn btd write-action" onclick="saveInstHQ()">Registrar</button></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL: ING EJECUCIÓN ═════ -->
+<div class="mov" id="mc-ing">
+  <div class="mdl wide">
+    <div class="mhdr"><div class="mtit" id="mc-ing-tit">Registrar Avance — Ingeniería</div><button class="mclose" onclick="cm('mc-ing')">✕</button></div>
+    <div class="mbody">
+      <div class="f2">
+        <div class="fg"><label class="fl">Ítem</label><select class="fs" id="ing-fa" onchange="onIngASel()"><option value="">— Seleccionar ítem —</option></select></div>
+        <div class="fg"><label class="fl">Estado</label><select class="fs" id="ing-fst"><option value="P">Programado</option><option value="E">En Ejecución</option><option value="V">En Revisión</option><option value="C">Completado ✓</option><option value="H">Con Hallazgo</option></select></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Fecha</label><input class="fi" type="date" id="ing-ffec"></div>
+        <div class="fg"><label class="fl">Ingeniero / Técnico</label><input class="fi" id="ing-ftec" placeholder="Nombre del responsable"></div>
+      </div>
+      <div class="fg"><label class="fl">Observaciones</label><textarea class="fta" id="ing-fobs" placeholder="Descripción del trabajo realizado, novedades…"></textarea></div>
+      <div class="fg">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><label class="fl">Hallazgos encontrados</label></div>
+        <div class="hlist" id="ing-hlistm"></div>
+        <div class="ahbox">
+          <div class="ahtit">+ Agregar hallazgo</div>
+          <div class="f2">
+            <div class="fg"><label class="fl">TAG / Sistema</label><input class="fi" id="ing-htag" placeholder="ej. SRV-PCS7, BATCH-SLURRY…"></div>
+            <div class="fg"><label class="fl">Tipo</label><select class="fs" id="ing-htipo"><option value="Software">Software</option><option value="Hardware">Hardware</option><option value="Red">Red / Comunicación</option><option value="Proceso">Proceso Batch</option></select></div>
+          </div>
+          <div class="fg"><label class="fl">Descripción</label><input class="fi" id="ing-hdesc" placeholder="Situación encontrada…"></div>
+          <div class="f2">
+            <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="ing-hprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+            <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="ing-hrec" placeholder="Acción recomendada…"></div>
+          </div>
+          <button class="btn bts" style="align-self:flex-end" onclick="addIngHI()">Agregar Hallazgo</button>
+        </div>
+      </div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mc-ing')">Cancelar</button><button class="btn bting write-action" onclick="saveIngC()">Guardar Avance</button></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL: ING HALLAZGO RÁPIDO ═════ -->
+<div class="mov" id="mhq-ing">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtit">△ Hallazgo Rápido — Ingeniería</div><button class="mclose" onclick="cm('mhq-ing')">✕</button></div>
+    <div class="mbody">
+      <div class="f2">
+        <div class="fg"><label class="fl">TAG / Sistema</label><input class="fi" id="ing-rhtag" placeholder="ej. SRV-PCS7"></div>
+        <div class="fg"><label class="fl">Ítem relacionado</label><select class="fs" id="ing-rharea"><option value="">— Seleccionar —</option></select></div>
+      </div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Tipo</label><select class="fs" id="ing-rhtipo"><option value="Software">Software</option><option value="Hardware">Hardware</option><option value="Red">Red / Comunicación</option><option value="Proceso">Proceso Batch</option></select></div>
+        <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="ing-rhprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="ing-rhdesc"></textarea></div>
+      <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="ing-rhrec" placeholder="Acción recomendada…"></div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mhq-ing')">Cancelar</button><button class="btn btd write-action" onclick="saveIngHQ()">Registrar</button></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL: NUEVA ATENCIÓN LLAMADO ═════ -->
+<div class="mov" id="mc-aten">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtit">📞 Nueva Atención de Llamado</div><button class="mclose" onclick="cm('mc-aten')">✕</button></div>
+    <div class="mbody">
+      <div class="f2">
+        <div class="fg"><label class="fl">Fecha</label><input class="fi" type="date" id="aten-ffec"></div>
+        <div class="fg"><label class="fl">Hora</label><input class="fi" type="time" id="aten-fhora"></div>
+      </div>
+      <div class="fg"><label class="fl">Sistema / Equipo afectado</label><input class="fi" id="aten-fsys" placeholder="ej. BATCH SLURRY, Servidor PCS7 v9.1…"></div>
+      <div class="fg"><label class="fl">Descripción del llamado</label><textarea class="fta" id="aten-fdesc" placeholder="Situación reportada, síntoma observado…"></textarea></div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Tiempo de respuesta (min)</label><input class="fi" type="number" id="aten-fmin" min="0" placeholder="ej. 45"></div>
+        <div class="fg"><label class="fl">Ingeniero que atendió</label><input class="fi" id="aten-ftec" placeholder="Nombre"></div>
+      </div>
+      <div class="fg"><label class="fl">Acción realizada</label><textarea class="fta" id="aten-faccion" placeholder="Diagnóstico y solución aplicada…" style="min-height:60px"></textarea></div>
+      <div class="fg">
+        <label class="fl">¿Superó 2 horas de respuesta?</label>
+        <select class="fs" id="aten-ftarde">
+          <option value="no">No — dentro del tiempo</option>
+          <option value="si">Sí — respuesta demorada</option>
+        </select>
+      </div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mc-aten')">Cancelar</button><button class="btn bting write-action" onclick="saveAten()">Guardar Atención</button></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════ */
+const INST_AREAS = [
+  {id:'HSC',  name:'Herbicidas SC',            cat:'HSC',  act:23, ins:19},
+  {id:'PARQ2',name:'Parque Solventes 2',        cat:'PARQ', act:19, ins:4},
+  {id:'PARQ1',name:'Parque Solventes 1',        cat:'PARQ', act:15, ins:1},
+  {id:'REA1', name:'Reactor 1',                 cat:'REAC', act:14, ins:14},
+  {id:'REA2', name:'Reactor 2',                 cat:'REAC', act:14, ins:13},
+  {id:'REA4', name:'Reactor 4',                 cat:'REAC', act:14, ins:14},
+  {id:'REA5', name:'Reactor 5',                 cat:'REAC', act:14, ins:13},
+  {id:'REA6', name:'Reactor 6',                 cat:'REAC', act:14, ins:13},
+  {id:'FORM4',name:'Tanque Formulador 4',        cat:'FORM', act:13, ins:6},
+  {id:'FORM5',name:'Tanque Formulador 5',        cat:'FORM', act:13, ins:6},
+  {id:'REA7', name:'Reactor 7',                 cat:'REAC', act:10, ins:9},
+  {id:'REA8', name:'Reactor 8',                 cat:'REAC', act:10, ins:9},
+  {id:'FORM15',name:'Tanque Formulador 15.000', cat:'FORM', act:8,  ins:4},
+  {id:'SLRY', name:'Tanque Slurry',             cat:'UTIL', act:7,  ins:4},
+  {id:'FORM25',name:'Tanque Formulador 25.000', cat:'FORM', act:5,  ins:4},
+  {id:'ISOQ', name:'Llenado Isotanque',         cat:'UTIL', act:3,  ins:3},
+  {id:'BASC', name:'Tanque Báscula 2-Ehe',      cat:'UTIL', act:3,  ins:3},
+  {id:'UTIL', name:'Utilities',                 cat:'UTIL', act:1,  ins:5},
+  {id:'ALMC', name:'Tanque Almacenamiento 50k', cat:'UTIL', act:0,  ins:1},
+];
+const TACT=200, TINS=145;
+
+// Ingeniería items — se crean al inicio del mes
+const ING_TEMPLATE = [
+  {id:'BATCH_SLR', name:'SLURRY — Simatic Batch',       cat:'BATCH', meta:'118 lotes/mes', lotes:118},
+  {id:'BATCH_R78', name:'REACTORES 7Y8 — Simatic Batch', cat:'BATCH', meta:'118 lotes/mes', lotes:118},
+  {id:'BATCH_PRO', name:'PROPANIL — Simatic Batch',      cat:'BATCH', meta:'28 lotes/mes',  lotes:28},
+  {id:'SRV_BATCH', name:'Servidor Simatic Batch',        cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_PCS82', name:'Servidor PCS7 v8.2',            cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_PCS91', name:'Servidor PCS7 v9.1',            cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_ROB',   name:'Robot Estibador',               cat:'SRV',   meta:'Respaldo sistema'},
+  {id:'SRV_ENC',   name:'Encajadora Prosystem',          cat:'SRV',   meta:'Respaldo sistema'},
+  {id:'BKP_PLSRY', name:'Backup Polipasto Slurry',       cat:'BKP',   meta:'Backup mensual'},
+  {id:'BKP_PLAMI', name:'Backup Polipasto Aminol',       cat:'BKP',   meta:'Backup mensual'},
+  {id:'BKP_PLHSC', name:'Backup Polipasto Herb SC',      cat:'BKP',   meta:'Backup mensual'},
+  {id:'BKP_MOLNO', name:'Backup Molino Netzsch',         cat:'BKP',   meta:'Backup mensual'},
+];
+
+const CCOL = {HSC:'#0369a1',PARQ:'#9d174d',REAC:'#1e6fa8',FORM:'#065f46',UTIL:'#374151'};
+const ING_CCOL = {BATCH:'#6b21a8',SRV:'#0369a1',BKP:'#065f46'};
+const SACC = {P:'#94a3b8',E:'#f6b042',V:'#00B5D8',C:'#2d6a4f',H:'#9b1c1c'};
+const ING_SACC = {P:'#94a3b8',E:'#f6b042',V:'#9333ea',C:'#2d6a4f',H:'#9b1c1c'};
+const SLAB = {P:'Programado',E:'En Ejecución',V:'Verif. PCS7',C:'Completado',H:'Con Hallazgo'};
+const ING_SLAB = {P:'Programado',E:'En Ejecución',V:'En Revisión',C:'Completado',H:'Con Hallazgo'};
+const PC = {Alta:'#9b1c1c',Media:'#b5600a',Baja:'#2d6a4f'};
+const MN = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+const mkK = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+const mkL = k => { const[y,m]=k.split('-'); return `${MN[+m-1]} ${y}`; };
+
+/* ═══════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════ */
+let cm_val = mkK(new Date());
+let instCards={}, instHall={}, ingCards={}, ingHall={}, ingAtens={};
+let instEditId=null, ingEditId=null, instDragId=null, ingDragId=null;
+let instKFilt='ALL', ingKFilt='ALL';
+let instTempH=[], ingTempH=[];
+let instReady=false, ingReady=false;
+let INST_CR, INST_HR, ING_CR, ING_HR, ING_AR;
+
+/* ═══════════════════════════════════════════════════
+   FIREBASE STATUS
+═══════════════════════════════════════════════════ */
+const sync = s => {
+  const dots = [document.getElementById('sdot'),document.getElementById('sdot2')];
+  const lbls = [document.getElementById('slbl'),document.getElementById('slbl2')];
+  const cls = {on:'on',sy:'sy',er:'er'}[s]||'';
+  const txt = {on:'En línea · tiempo real',sy:'Sincronizando…',er:'Sin conexión'}[s]||'Conectando…';
+  dots.forEach(d=>{if(d)d.className='sdot '+cls;});
+  lbls.forEach(l=>{if(l)l.textContent=txt;});
+};
+db.ref('.info/connected').on('value', s => sync(s.val()?'on':'er'));
+const fu = (ref,d) => { sync('sy'); return ref.update(d).then(()=>sync('on')).catch(()=>sync('er')); };
+const fs = (ref,d) => { sync('sy'); return ref.set(d).then(()=>sync('on')).catch(()=>sync('er')); };
+
+/* ═══════════════════════════════════════════════════
+   VIEW SWITCHING
+═══════════════════════════════════════════════════ */
+const ALL_VIEWS = ['dash','inst-kanban','inst-hall','inst-rep','ing-kanban','ing-hall','ing-rep','ing-aten'];
+function sw(v) {
+  ALL_VIEWS.forEach(id => {
+    document.getElementById('view-'+id).classList.toggle('active', id===v);
+  });
+  document.querySelectorAll('.sb-item').forEach(el => {
+    el.classList.remove('active','inst-active','ing-active');
+  });
+  const target = document.getElementById('sbi-'+v);
+  if(target) {
+    if(v==='dash') target.classList.add('active');
+    else if(v.startsWith('inst')) target.classList.add('inst-active');
+    else target.classList.add('ing-active');
+  }
+  renderView(v);
+}
+function renderView(v) {
+  if(v==='dash') rDash();
+  else if(v==='inst-kanban') rInstKanban();
+  else if(v==='inst-hall') rInstHall();
+  else if(v==='inst-rep') rInstRep();
+  else if(v==='ing-kanban') rIngKanban();
+  else if(v==='ing-hall') rIngHall();
+  else if(v==='ing-rep') rIngRep();
+  else if(v==='ing-aten') rAten();
+}
+function activeView() {
+  return ALL_VIEWS.find(id=>document.getElementById('view-'+id).classList.contains('active'));
+}
+function rAll() { renderView(activeView()); }
+
+/* ═══════════════════════════════════════════════════
+   MONTH
+═══════════════════════════════════════════════════ */
+function buildMopts() {
+  const sel=document.getElementById('msel'), now=new Date(); sel.innerHTML='';
+  for(let i=-5;i<=3;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const k=mkK(d); const o=document.createElement('option');
+    o.value=k; o.textContent=mkL(k); if(k===cm_val)o.selected=true;
+    sel.appendChild(o);
+  }
+}
+function chMonth(k) {
+  cm_val=k; instReady=false; ingReady=false;
+  document.getElementById('sb-month-lbl').textContent=mkL(k);
+  listenAll();
+}
+
+/* ═══════════════════════════════════════════════════
+   FIREBASE LISTENERS
+═══════════════════════════════════════════════════ */
+function listenAll() {
+  if(INST_CR) INST_CR.off(); if(INST_HR) INST_HR.off();
+  if(ING_CR)  ING_CR.off();  if(ING_HR)  ING_HR.off();
+  if(ING_AR)  ING_AR.off();
+
+  INST_CR = db.ref(`ni_month/${cm_val}/instrumentacion/cards`);
+  INST_HR = db.ref(`ni_month/${cm_val}/instrumentacion/hall`);
+  ING_CR  = db.ref(`ni_month/${cm_val}/ingenieria/cards`);
+  ING_HR  = db.ref(`ni_month/${cm_val}/ingenieria/hall`);
+  ING_AR  = db.ref(`ni_month/${cm_val}/ingenieria/atenciones`);
+
+  INST_CR.on('value', s => {
+    const d=s.val()||{};
+    if(!Object.keys(d).length && !instReady) { initInstCards(); }
+    else { instCards=d; instReady=true; rAll(); updateSbBadges(); }
+  });
+  INST_HR.on('value', s => { instHall=s.val()||{}; rAll(); updateSbBadges(); });
+  ING_CR.on('value', s => {
+    const d=s.val()||{};
+    if(!Object.keys(d).length && !ingReady) { initIngCards(); }
+    else { ingCards=d; ingReady=true; rAll(); updateSbBadges(); }
+  });
+  ING_HR.on('value',  s => { ingHall=s.val()||{}; rAll(); updateSbBadges(); });
+  ING_AR.on('value',  s => { ingAtens=s.val()||{}; rAll(); updateSbBadges(); });
+}
+
+function initInstCards() {
+  sync('sy'); const b={};
+  INST_AREAS.forEach(a=>{
+    b[a.id]={id:a.id,name:a.name,cat:a.cat,act:a.act,ins:a.ins,pct:0,status:'P',fecha:'',tec:'',obs:'',month:cm_val,ts:''};
+  });
+  INST_CR.set(b).then(()=>{sync('on');instReady=true;});
+}
+function initIngCards() {
+  sync('sy'); const b={};
+  ING_TEMPLATE.forEach(t=>{
+    b[t.id]={id:t.id,name:t.name,cat:t.cat,meta:t.meta||'',lotes:t.lotes||0,status:'P',fecha:'',tec:'',obs:'',month:cm_val,ts:''};
+  });
+  ING_CR.set(b).then(()=>{sync('on');ingReady=true;});
+}
+
+function updateSbBadges() {
+  const instDone = Object.values(instCards).filter(c=>c.status==='C'||c.status==='H').length;
+  const ingDone  = Object.values(ingCards).filter(c=>c.status==='C'||c.status==='H').length;
+  const instTotal= INST_AREAS.length;
+  const ingTotal = ING_TEMPLATE.length;
+  document.getElementById('sb-inst-k-cnt').textContent = `${instDone}/${instTotal}`;
+  document.getElementById('sb-ing-k-cnt').textContent  = `${ingDone}/${ingTotal}`;
+  document.getElementById('sb-inst-h-cnt').textContent = Object.keys(instHall).length||'0';
+  document.getElementById('sb-ing-h-cnt').textContent  = Object.keys(ingHall).length||'0';
+  document.getElementById('sb-ing-a-cnt').textContent  = Object.keys(ingAtens).length||'0';
+}
+
+/* ═══════════════════════════════════════════════════
+   GAUGE (canvas half-circle)
+═══════════════════════════════════════════════════ */
+function drawG(cvId, done, total, color='#1A2E5A') {
+  const cv=document.getElementById(cvId); if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H-10,R=H*0.78;
+  ctx.clearRect(0,0,W,H);
+  const pct=total>0?Math.min(done/total,1):0;
+  const segs=[{s:0,e:.4,c:'#e74c3c'},{s:.4,e:.8,c:'#f1c40f'},{s:.8,e:1,c:'#27ae60'}];
+  segs.forEach(sg=>{
+    ctx.beginPath();ctx.arc(cx,cy,R,Math.PI+sg.s*Math.PI,Math.PI+sg.e*Math.PI);
+    ctx.strokeStyle=sg.c;ctx.lineWidth=14;ctx.lineCap='butt';ctx.stroke();
+  });
+  const ang=Math.PI+pct*Math.PI,nx=cx+R*Math.cos(ang),ny=cy+R*Math.sin(ang);
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(nx,ny);
+  ctx.strokeStyle=color;ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,6,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();
+  ctx.font='bold 8px DM Mono,monospace';ctx.fillStyle='#6a7a6a';ctx.textAlign='center';
+  const steps=5;
+  for(let i=0;i<=steps;i++){
+    const p=i/steps,v=Math.round(total*p);
+    const a=Math.PI+p*Math.PI,lx=cx+(R+14)*Math.cos(a),ly=cy+(R+14)*Math.sin(a);
+    ctx.fillText(v,lx,ly);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   DASHBOARD RENDER
+═══════════════════════════════════════════════════ */
+function rDash() {
+  const ml = mkL(cm_val);
+  document.getElementById('dash-month-lbl').textContent = ml;
+
+  // --- INSTRUMENTACIÓN ---
+  const instCA = Object.values(instCards);
+  const instDone = instCA.filter(c=>c.status==='C'||c.status==='H');
+  const cc = instDone.length, tot = INST_AREAS.length;
+  const pct = tot>0?Math.round(cc/tot*100):0;
+  const ad  = instDone.reduce((a,c)=>a+c.act,0);
+  const id2 = instDone.reduce((a,c)=>a+c.ins,0);
+  const hcI = Object.keys(instHall).length;
+
+  document.getElementById('dash-inst-kpis').innerHTML =
+    kpiCard('Áreas del mes',  tot,  '19 áreas contrato','') +
+    kpiCard('Completadas',    cc,   pct+'% del total','var(--ok)') +
+    kpiCard('Actuadores ✓',   ad,   `de ${TACT} totales`,'var(--inf)') +
+    kpiCard('Instrumentos ✓', id2,  `de ${TINS} totales`,'var(--grn)') +
+    kpiCard('Hallazgos',      hcI,  ml,'var(--err)');
+
+  document.getElementById('gbv-act-dash').textContent = ad;
+  document.getElementById('gda-dash').textContent = `${ad} verificados — Meta: ${TACT}`;
+  document.getElementById('gbv-ins-dash').textContent = id2;
+  document.getElementById('gdi-dash').textContent = `${id2} verificados — Meta: ${TINS}`;
+  drawG('cva-dash', ad, TACT);
+  drawG('cvi-dash', id2, TINS);
+
+  // Tabla progreso inst
+  const rows = INST_AREAS.map(a=>{
+    const c=instCards[a.id]||{}, st=c.status||'P';
+    const hct=Object.values(instHall).filter(h=>h.area===a.id).length;
+    const p=c.pct||0, sc={P:'sP',E:'sE',V:'sV',C:'sC',H:'sH'}[st]||'sP';
+    return `<tr>
+      <td style="color:${CCOL[a.cat]};font-weight:600">${a.name}</td>
+      <td style="text-align:center;font-family:var(--fm)">${a.act}</td>
+      <td style="text-align:center;font-family:var(--fm)">${a.ins}</td>
+      <td><span class="sbdg ${sc}">${SLAB[st]}</span></td>
+      <td style="font-family:var(--fm);font-size:10px">${c.fecha||'—'}</td>
+      <td style="font-size:11px">${c.tec||'—'}</td>
+      <td><div style="display:flex;align-items:center;gap:5px"><div class="mbw"><div class="mb" style="width:${p}%;background:${p>=80?'#27ae60':p>=40?'#f6b042':'#e74c3c'}"></div></div><span class="pl">${p}%</span></div></td>
+      <td style="text-align:center">${hct>0?`<span class="hbdg">${hct}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('dash-ptbl').innerHTML =
+    `<thead><tr><th>Área</th><th>Act.</th><th>Instr.</th><th>Estado</th><th>Fecha</th><th>Técnico</th><th>Progreso</th><th>Hall.</th></tr></thead><tbody>${rows}</tbody>`;
+
+  // --- INGENIERÍA ---
+  const ingCA = Object.values(ingCards);
+  const ingDone = ingCA.filter(c=>c.status==='C'||c.status==='H');
+  const ingCC = ingDone.length, ingTot = ING_TEMPLATE.length;
+  const ingPct = ingTot>0?Math.round(ingCC/ingTot*100):0;
+  const hcIng = Object.keys(ingHall).length;
+  const atnCnt = Object.keys(ingAtens).length;
+
+  document.getElementById('dash-ing-kpis').innerHTML =
+    kpiCard('Ítems del mes',    ingTot,  'Batch + Srv + Bkp','') +
+    kpiCard('Completados',      ingCC,   ingPct+'% del total','var(--ing)') +
+    kpiCard('Hallazgos',        hcIng,   ml,'var(--err)') +
+    kpiCard('Atenciones llamado',atnCnt, ml,'var(--ing2)');
+
+  // 3 gauges Ingeniería
+  const batchItems = ingCA.filter(c=>c.cat==='BATCH');
+  const srvItems   = ingCA.filter(c=>c.cat==='SRV');
+  const bkpItems   = ingCA.filter(c=>c.cat==='BKP');
+  const batchDone  = batchItems.filter(c=>c.status==='C'||c.status==='H').length;
+  const srvDone    = srvItems.filter(c=>c.status==='C'||c.status==='H').length;
+  const bkpDone    = bkpItems.filter(c=>c.status==='C'||c.status==='H').length;
+
+  drawG('cvb-dash', batchDone, batchItems.length||3, '#9333ea');
+  document.getElementById('gbv-batch-dash').textContent = batchDone;
+  document.getElementById('gdb-dash').textContent = `de ${batchItems.length} líneas Batch`;
+
+  drawG('cvs-dash', srvDone, srvItems.length||5, '#1e6fa8');
+  document.getElementById('gbv-srv-dash').textContent = srvDone;
+  document.getElementById('gds-dash').textContent = `de ${srvItems.length} servidores`;
+
+  drawG('cvk-dash', bkpDone, bkpItems.length||4, '#2d6a4f');
+  document.getElementById('gbv-bkp-dash').textContent = bkpDone;
+  document.getElementById('gdk-dash').textContent = `de ${bkpItems.length} backups`;
+
+  // Tabla progreso Ingeniería
+  document.getElementById('dash-ing-month-lbl').textContent = ml;
+  const ingRows = ING_TEMPLATE.map(t => {
+    const c=ingCards[t.id]||{}, st=c.status||'P';
+    const hct=Object.values(ingHall).filter(h=>h.area===t.id).length;
+    const sc={P:'sP',E:'sE',V:'sV',C:'sC',H:'sH'}[st]||'sP';
+    const catCol=ING_CCOL[t.cat]||'#374151';
+    return `<tr>
+      <td style="color:${catCol};font-weight:600">${t.name}</td>
+      <td style="text-align:center;font-family:var(--fm)"><span style="font-size:9px;background:var(--ingb);color:var(--ing);padding:1px 6px;border-radius:8px;border:1px solid rgba(107,33,168,.2)">${t.cat}</span></td>
+      <td><span class="sbdg ${sc}">${ING_SLAB[st]}</span></td>
+      <td style="font-family:var(--fm);font-size:10px">${c.fecha||'—'}</td>
+      <td style="font-size:11px">${c.tec||'—'}</td>
+      <td style="font-size:11px;color:var(--t2)">${c.obs||'—'}</td>
+      <td style="text-align:center">${hct>0?`<span class="hbdg">${hct}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('dash-ing-ptbl').innerHTML =
+    `<thead><tr><th>Ítem</th><th>Cat.</th><th>Estado</th><th>Fecha</th><th>Ingeniero</th><th>Observaciones</th><th>Hall.</th></tr></thead><tbody>${ingRows}</tbody>`;
+}
+
+function kpiCard(label, value, sub, col) {
+  return `<div class="kc"><div class="kl">${label}</div><div class="kv"${col?` style="color:${col}"`:''}>${value}</div><div class="ks2">${sub}</div></div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   INST KANBAN
+═══════════════════════════════════════════════════ */
+function rInstKanban() {
+  document.getElementById('inst-k-sub').textContent = `${mkL(cm_val)} · Instrumentación`;
+  const ca=Object.values(instCards);
+  const flt=instKFilt==='ALL'?ca:ca.filter(c=>c.cat===instKFilt);
+  ['P','E','V','C','H'].forEach(s=>{
+    const body=document.getElementById('inst-b'+s);
+    const col=flt.filter(c=>c.status===s);
+    document.getElementById('inst-cn'+s).textContent=col.length;
+    body.innerHTML='';
+    if(!col.length){body.innerHTML='<div class="ecol">Sin áreas</div>';return;}
+    col.forEach(c=>body.appendChild(mkInstCard(c)));
+  });
+  uInstKS(ca);
+}
+function mkInstCard(c) {
+  const d=document.createElement('div');
+  d.className='card'; d.draggable=true; d.dataset.id=c.id;
+  d.ondragstart=()=>{instDragId=c.id;d.classList.add('dragging');};
+  d.ondragend=()=>d.classList.remove('dragging');
+  const acc=SACC[c.status]||'#94a3b8';
+  const hc=Object.values(instHall).filter(h=>h.area===c.id).length;
+  const hb=hc>0?`<div class="chl"><span class="hbdg">△ ${hc} hallazgo${hc>1?'s':''}</span></div>`:'';
+  d.innerHTML=`
+    <div class="cstripe" style="background:${acc}"></div>
+    <div class="cbd">
+      <div class="ctop"><div class="can">${c.name}</div><div class="cmb">${mkL(c.month||cm_val)}</div></div>
+      <div class="ccounts"><span class="cpill cpa">⚙ ${c.act} act.</span><span class="cpill cpi">◎ ${c.ins} instr.</span></div>
+      <div class="cprog"><div class="cpl"><span>Progreso NI</span><span>${c.pct||0}%</span></div><div class="cpw"><div class="cpf" style="width:${c.pct||0}%"></div></div></div>
+      ${hb}
+      ${c.fecha?`<div class="cdt">📅 ${c.fecha}${c.tec?' · '+c.tec:''}</div>`:''}
+      <div class="cfoot">
+        <span class="sbdg s${c.status}">${SLAB[c.status]||c.status}</span>
+        <div class="cacts">
+          <button class="cbtn write-action" title="Registrar" onclick="oInstAC('${c.id}')">✎</button>
+          <button class="cbtn write-action" title="Avanzar" onclick="advInst('${c.id}')">→</button>
+          <button class="cbtn d write-action" title="Hallazgo" onclick="mkInstH('${c.id}')">△</button>
+        </div>
+      </div>
+    </div>`;
+  return d;
+}
+function advInst(id) {
+  if(!canWrite()) return;
+  const c=instCards[id]; if(!c)return;
+  const o=['P','E','V','C'],i=o.indexOf(c.status);
+  if(i<o.length-1) fu(INST_CR.child(id),{...c,status:o[i+1],ts:o[i+1]==='C'?new Date().toLocaleString('es-CO'):c.ts});
+}
+function mkInstH(id) { const c=instCards[id]; if(c)fu(INST_CR.child(id),{...c,status:'H'}); }
+function instKF(btn,f) {
+  document.querySelectorAll('#inst-kflt .fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); instKFilt=f; rInstKanban();
+}
+function uInstKS(ca) {
+  const tot=ca.length,cc=ca.filter(c=>c.status==='C'||c.status==='H').length;
+  const pct=tot>0?Math.round(cc/tot*100):0;
+  document.getElementById('inst-pgf').style.width=pct+'%';
+  document.getElementById('inst-pgct').textContent=pct+'%';
+  document.getElementById('inst-kstr').innerHTML=
+    `<div class="ksi"><div class="ksd" style="background:#94a3b8"></div>${ca.filter(c=>c.status==='P').length} programadas</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#f6b042"></div>${ca.filter(c=>c.status==='E').length} en ejecución</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#00B5D8"></div>${ca.filter(c=>c.status==='V').length} verificación</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#2d6a4f"></div>${cc} completadas (${pct}%)</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#9b1c1c"></div>${Object.keys(instHall).length} hallazgos</div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   ING KANBAN
+═══════════════════════════════════════════════════ */
+function rIngKanban() {
+  document.getElementById('ing-k-sub').textContent = `${mkL(cm_val)} · Ingeniería`;
+  const ca=Object.values(ingCards);
+  const flt=ingKFilt==='ALL'?ca:ca.filter(c=>c.cat===ingKFilt);
+  ['P','E','V','C','H'].forEach(s=>{
+    const body=document.getElementById('ing-b'+s);
+    const col=flt.filter(c=>c.status===s);
+    document.getElementById('ing-cn'+s).textContent=col.length;
+    body.innerHTML='';
+    if(!col.length){body.innerHTML='<div class="ecol">Sin ítems</div>';return;}
+    col.forEach(c=>body.appendChild(mkIngCard(c)));
+  });
+  uIngKS(ca);
+}
+function mkIngCard(c) {
+  const d=document.createElement('div');
+  d.className='card'; d.draggable=true; d.dataset.id=c.id;
+  d.ondragstart=()=>{ingDragId=c.id;d.classList.add('dragging');};
+  d.ondragend=()=>d.classList.remove('dragging');
+  const acc=ING_SACC[c.status]||'#94a3b8';
+  const catCol=ING_CCOL[c.cat]||'#374151';
+  const hc=Object.values(ingHall).filter(h=>h.area===c.id).length;
+  const hb=hc>0?`<div class="chl"><span class="hbdg">△ ${hc} hallazgo${hc>1?'s':''}</span></div>`:'';
+  const lotespill=c.cat==='BATCH'&&c.lotes?`<span class="cpill cing">⊙ ${c.lotes} lotes</span>`:'';
+  d.innerHTML=`
+    <div class="cstripe" style="background:${acc}"></div>
+    <div class="cbd">
+      <div class="ctop">
+        <div class="can">${c.name}</div>
+        <div style="font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:20px;background:rgba(107,33,168,.08);color:${catCol};border:1px solid rgba(107,33,168,.2);white-space:nowrap">${c.cat}</div>
+      </div>
+      <div class="ccounts">${lotespill}<span class="cpill cing">📋 ${c.meta||''}</span></div>
+      ${hb}
+      ${c.fecha?`<div class="cdt">📅 ${c.fecha}${c.tec?' · '+c.tec:''}</div>`:''}
+      ${c.obs?`<div style="font-size:10px;color:var(--t2);margin-bottom:4px;line-height:1.4">${c.obs}</div>`:''}
+      <div class="cfoot">
+        <span class="sbdg s${c.status}">${ING_SLAB[c.status]||c.status}</span>
+        <div class="cacts">
+          <button class="cbtn write-action" title="Registrar" onclick="oIngAC('${c.id}')">✎</button>
+          <button class="cbtn write-action" title="Avanzar" onclick="advIng('${c.id}')">→</button>
+          <button class="cbtn d write-action" title="Hallazgo" onclick="mkIngH('${c.id}')">△</button>
+        </div>
+      </div>
+    </div>`;
+  return d;
+}
+function advIng(id) {
+  if(!canWrite()) return;
+  const c=ingCards[id]; if(!c)return;
+  const o=['P','E','V','C'],i=o.indexOf(c.status);
+  if(i<o.length-1) fu(ING_CR.child(id),{...c,status:o[i+1],ts:o[i+1]==='C'?new Date().toLocaleString('es-CO'):c.ts});
+}
+function mkIngH(id) { const c=ingCards[id]; if(c)fu(ING_CR.child(id),{...c,status:'H'}); }
+function ingKF(btn,f) {
+  document.querySelectorAll('#ing-kflt .fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); ingKFilt=f; rIngKanban();
+}
+function uIngKS(ca) {
+  const tot=ca.length,cc=ca.filter(c=>c.status==='C'||c.status==='H').length;
+  const pct=tot>0?Math.round(cc/tot*100):0;
+  document.getElementById('ing-pgf').style.width=pct+'%';
+  document.getElementById('ing-pgct').textContent=pct+'%';
+  document.getElementById('ing-kstr').innerHTML=
+    `<div class="ksi"><div class="ksd" style="background:#94a3b8"></div>${ca.filter(c=>c.status==='P').length} programados</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#f6b042"></div>${ca.filter(c=>c.status==='E').length} en ejecución</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#9333ea"></div>${ca.filter(c=>c.status==='V').length} revisión</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#2d6a4f"></div>${cc} completados (${pct}%)</div>`+
+    `<div class="ksi"><div class="ksd" style="background:#9b1c1c"></div>${Object.keys(ingHall).length} hallazgos</div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   DRAG & DROP (shared)
+═══════════════════════════════════════════════════ */
+function dov(e){e.preventDefault();e.currentTarget.classList.add('dov');}
+function dlv(e){e.currentTarget.classList.remove('dov');}
+function instDp(e,s){
+  e.preventDefault();e.currentTarget.classList.remove('dov');
+  if(!canWrite()) return;
+  if(!instDragId||!instCards[instDragId])return;
+  const c=instCards[instDragId];
+  fu(INST_CR.child(instDragId),{...c,status:s,ts:s==='C'?new Date().toLocaleString('es-CO'):c.ts});
+  instDragId=null;
+}
+function ingDp(e,s){
+  e.preventDefault();e.currentTarget.classList.remove('dov');
+  if(!canWrite()) return;
+  if(!ingDragId||!ingCards[ingDragId])return;
+  const c=ingCards[ingDragId];
+  fu(ING_CR.child(ingDragId),{...c,status:s,ts:s==='C'?new Date().toLocaleString('es-CO'):c.ts});
+  ingDragId=null;
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════════════ */
+function cm(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+/* ─── INST EXECUTION MODAL ─── */
+function canWrite() {
+  if(!currentRole || ROLE_CAPS[currentRole] === 'read') {
+    showToast('Rol de Solo Lectura — sin permisos de edición', 'err');
+    return false;
+  }
+  return true;
+}
+function showToast(msg, type='ok') {
+  let t = document.getElementById('ni-toast');
+  if(!t){ t=document.createElement('div'); t.id='ni-toast'; t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:10px;font-family:var(--fm);font-size:12px;z-index:9999;transition:opacity .3s;box-shadow:0 4px 20px rgba(0,0,0,.2)'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.style.background = type==='err'?'#9b1c1c':'#2d6a4f';
+  t.style.color = '#fff';
+  t.style.opacity = '1';
+  clearTimeout(t._to);
+  t._to = setTimeout(()=>t.style.opacity='0', 2800);
+}
+
+function oInstAC(aId) {
+  if(!canWrite()) return;
+  instEditId=aId; instTempH=[];
+  const c=aId&&instCards[aId]?instCards[aId]:{};
+  document.getElementById('mc-inst-tit').textContent = aId&&c.name?`Ejecución — ${c.name}`:'Registrar Ejecución — Instrumentación';
+  document.getElementById('inst-fa').value=aId||'';
+  document.getElementById('inst-fst').value=c.status||'P';
+  document.getElementById('inst-fna').value=c.act||'';
+  document.getElementById('inst-fni').value=c.ins||'';
+  document.getElementById('inst-fpct').value=c.pct||0;
+  document.getElementById('inst-ffec').value=c.fecha||new Date().toISOString().split('T')[0];
+  document.getElementById('inst-ftec').value=c.tec||'';
+  document.getElementById('inst-fobs').value=c.obs||'';
+  instTempH=Object.values(instHall).filter(h=>h.area===aId).map(h=>({...h}));
+  document.getElementById('mc-inst').classList.add('open');
+  rInstHlistM();
+}
+function onInstASel() {
+  const aId=document.getElementById('inst-fa').value, a=INST_AREAS.find(x=>x.id===aId);
+  if(a){document.getElementById('inst-fna').value=a.act;document.getElementById('inst-fni').value=a.ins;}
+  instEditId=aId; instTempH=Object.values(instHall).filter(h=>h.area===aId).map(h=>({...h}));
+  rInstHlistM();
+}
+function addInstHI() {
+  const tag=document.getElementById('inst-htag').value.trim(), desc=document.getElementById('inst-hdesc').value.trim();
+  if(!tag||!desc){alert('TAG y descripción son obligatorios');return;}
+  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('inst-hrec').value.trim()});
+  ['inst-htag','inst-hdesc','inst-hrec'].forEach(i=>document.getElementById(i).value='');
+  rInstHlistM();
+}
+function rInstHlistM() {
+  const l=document.getElementById('inst-hlistm');
+  if(!instTempH.length){l.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px">Sin hallazgos aún</div>';return;}
+  l.innerHTML=instTempH.map((h,i)=>`<div class="hitem"><div class="hitm"><div class="httag">${h.tag}</div><div class="htdesc">${h.desc}</div>${h.rec?`<div class="htrec">→ ${h.rec}</div>`:''}<div class="htmet">${h.prio}</div></div><button class="hdel" onclick="rmInstH(${i})">✕</button></div>`).join('');
+}
+function rmInstH(i){instTempH.splice(i,1);rInstHlistM();}
+function saveInstC() {
+  const aId=instEditId||document.getElementById('inst-fa').value;
+  if(!aId){alert('Selecciona un área');return;}
+  const area=INST_AREAS.find(a=>a.id===aId)||{}, base=instCards[aId]||{};
+  const status=document.getElementById('inst-fst').value;
+  fu(INST_CR.child(aId),{...base,id:aId,name:area.name||base.name,cat:area.cat||base.cat,act:area.act||base.act,ins:area.ins||base.ins,pct:parseInt(document.getElementById('inst-fpct').value)||0,status,fecha:document.getElementById('inst-ffec').value,tec:document.getElementById('inst-ftec').value.trim(),obs:document.getElementById('inst-fobs').value.trim(),month:cm_val,ts:status==='C'?new Date().toLocaleString('es-CO'):base.ts||''});
+  Object.entries(instHall).forEach(([k,h])=>{if(h.area===aId)INST_HR.child(k).remove();});
+  instTempH.forEach(h=>{const hid=h.id||('h'+Date.now());INST_HR.child(hid).set({...h,id:hid,area:aId,areaName:area.name||base.name,month:cm_val,fecha:document.getElementById('inst-ffec').value,tec:document.getElementById('inst-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
+  cm('mc-inst');
+}
+
+/* ─── INST HALLAZGO RÁPIDO ─── */
+function oInstHQ(){['inst-rhtag','inst-rhdesc','inst-rhrec','inst-rhtec'].forEach(i=>document.getElementById(i).value='');document.getElementById('mhq-inst').classList.add('open');}
+function saveInstHQ(){
+  const tag=document.getElementById('inst-rhtag').value.trim(), desc=document.getElementById('inst-rhdesc').value.trim();
+  if(!tag||!desc){alert('TAG y descripción obligatorios');return;}
+  const aId=document.getElementById('inst-rharea').value, area=INST_AREAS.find(a=>a.id===aId)||{};
+  const hid='h'+Date.now();
+  INST_HR.child(hid).set({id:hid,tag,area:aId,areaName:area.name||aId,tipo:document.getElementById('inst-rhtipo').value,prio:document.getElementById('inst-rhprio').value,desc,rec:document.getElementById('inst-rhrec').value.trim(),tec:document.getElementById('inst-rhtec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false});
+  cm('mhq-inst');
+}
+
+/* ─── ING EXECUTION MODAL ─── */
+function oIngAC(iId) {
+  if(!canWrite()) return;
+  ingEditId=iId; ingTempH=[];
+  const c=iId&&ingCards[iId]?ingCards[iId]:{};
+  document.getElementById('mc-ing-tit').textContent = iId&&c.name?`Avance — ${c.name}`:'Registrar Avance — Ingeniería';
+  document.getElementById('ing-fa').value=iId||'';
+  document.getElementById('ing-fst').value=c.status||'P';
+  document.getElementById('ing-ffec').value=c.fecha||new Date().toISOString().split('T')[0];
+  document.getElementById('ing-ftec').value=c.tec||'';
+  document.getElementById('ing-fobs').value=c.obs||'';
+  ingTempH=Object.values(ingHall).filter(h=>h.area===iId).map(h=>({...h}));
+  document.getElementById('mc-ing').classList.add('open');
+  rIngHlistM();
+}
+function onIngASel(){
+  const iId=document.getElementById('ing-fa').value;
+  ingEditId=iId; ingTempH=Object.values(ingHall).filter(h=>h.area===iId).map(h=>({...h}));
+  rIngHlistM();
+}
+function addIngHI(){
+  const tag=document.getElementById('ing-htag').value.trim(), desc=document.getElementById('ing-hdesc').value.trim();
+  if(!tag||!desc){alert('TAG y descripción son obligatorios');return;}
+  ingTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('ing-htipo').value,desc,prio:document.getElementById('ing-hprio').value,rec:document.getElementById('ing-hrec').value.trim()});
+  ['ing-htag','ing-hdesc','ing-hrec'].forEach(i=>document.getElementById(i).value='');
+  rIngHlistM();
+}
+function rIngHlistM(){
+  const l=document.getElementById('ing-hlistm');
+  if(!ingTempH.length){l.innerHTML='<div style="font-size:11px;color:var(--t3);padding:4px">Sin hallazgos aún</div>';return;}
+  l.innerHTML=ingTempH.map((h,i)=>`<div class="hitem"><div class="hitm"><div class="httag">${h.tag}</div><div class="htdesc">${h.desc}</div>${h.rec?`<div class="htrec">→ ${h.rec}</div>`:''}<div class="htmet">${h.prio}</div></div><button class="hdel" onclick="rmIngH(${i})">✕</button></div>`).join('');
+}
+function rmIngH(i){ingTempH.splice(i,1);rIngHlistM();}
+function saveIngC(){
+  const iId=ingEditId||document.getElementById('ing-fa').value;
+  if(!iId){alert('Selecciona un ítem');return;}
+  const tmpl=ING_TEMPLATE.find(t=>t.id===iId)||{}, base=ingCards[iId]||{};
+  const status=document.getElementById('ing-fst').value;
+  fu(ING_CR.child(iId),{...base,id:iId,name:tmpl.name||base.name,cat:tmpl.cat||base.cat,meta:tmpl.meta||base.meta,lotes:tmpl.lotes||base.lotes||0,status,fecha:document.getElementById('ing-ffec').value,tec:document.getElementById('ing-ftec').value.trim(),obs:document.getElementById('ing-fobs').value.trim(),month:cm_val,ts:status==='C'?new Date().toLocaleString('es-CO'):base.ts||''});
+  Object.entries(ingHall).forEach(([k,h])=>{if(h.area===iId)ING_HR.child(k).remove();});
+  ingTempH.forEach(h=>{const hid=h.id||('h'+Date.now());ING_HR.child(hid).set({...h,id:hid,area:iId,areaName:tmpl.name||base.name,month:cm_val,fecha:document.getElementById('ing-ffec').value,tec:document.getElementById('ing-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
+  cm('mc-ing');
+}
+
+/* ─── ING HALLAZGO RÁPIDO ─── */
+function oIngHQ(){['ing-rhtag','ing-rhdesc','ing-rhrec'].forEach(i=>document.getElementById(i).value='');document.getElementById('mhq-ing').classList.add('open');}
+function saveIngHQ(){
+  const tag=document.getElementById('ing-rhtag').value.trim(), desc=document.getElementById('ing-rhdesc').value.trim();
+  if(!tag||!desc){alert('TAG y descripción obligatorios');return;}
+  const aId=document.getElementById('ing-rharea').value, tmpl=ING_TEMPLATE.find(t=>t.id===aId)||{};
+  const hid='h'+Date.now();
+  ING_HR.child(hid).set({id:hid,tag,area:aId,areaName:tmpl.name||aId,tipo:document.getElementById('ing-rhtipo').value,prio:document.getElementById('ing-rhprio').value,desc,rec:document.getElementById('ing-rhrec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false});
+  cm('mhq-ing');
+}
+
+/* ═══════════════════════════════════════════════════
+   HALLAZGOS RENDER
+═══════════════════════════════════════════════════ */
+function rInstHall() {
+  const ha=Object.values(instHall), g=document.getElementById('inst-hallbody');
+  if(!ha.length){g.innerHTML=emptyHall('Instrumentación','var(--ok)');return;}
+  g.innerHTML=`<div class="rhgrid">`+ha.map(h=>hallCard(h,'inst')).join('')+'</div>';
+}
+function rIngHall() {
+  const ha=Object.values(ingHall), g=document.getElementById('ing-hallbody');
+  if(!ha.length){g.innerHTML=emptyHall('Ingeniería','var(--ing)');return;}
+  g.innerHTML=`<div class="rhgrid">`+ha.map(h=>hallCard(h,'ing')).join('')+'</div>';
+}
+function emptyHall(lbl, col) {
+  return `<div style="text-align:center;padding:50px;color:var(--t3)"><div style="font-size:36px;color:${col};margin-bottom:10px">✓</div><div style="font-family:var(--fh);font-size:16px;font-weight:700;color:${col}">Sin hallazgos — ${mkL(cm_val)}</div><div style="font-size:12px;margin-top:6px">Todos los mantenimientos de ${lbl} sin novedades</div></div>`;
+}
+function hallCard(h, discipline) {
+  const bdr = h.resuelto?'rgba(45,106,79,.25)':'rgba(155,28,28,.2)';
+  const bg  = h.resuelto?'#f0fff4':'#fff8f5';
+  const bdrH= h.resuelto?'rgba(45,106,79,.12)':'rgba(155,28,28,.08)';
+  const closeRef = discipline==='inst'?`clsInstH('${h.id}')`:`clsIngH('${h.id}')`;
+  return `<div style="background:var(--sur);border:1px solid ${bdr};border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)">
+    <div style="padding:9px 13px;background:${bg};border-bottom:1px solid ${bdrH};display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <div style="font-family:var(--fm);font-size:12px;font-weight:600;color:var(--navy)">${h.tag}
+          <span style="font-size:9px;background:var(--infb);color:var(--inf);padding:1px 6px;border-radius:10px;border:1px solid rgba(30,111,168,.2)">${h.tipo||''}</span>
+        </div>
+        <div style="font-size:10px;color:var(--t3);font-family:var(--fm);margin-top:1px">${h.areaName||''} · ${h.fecha||''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <span style="font-size:9px;color:${PC[h.prio||'Media']};border:1px solid ${PC[h.prio||'Media']};padding:2px 6px;border-radius:4px;font-family:var(--fm)">${h.prio||'Media'}</span>
+        ${h.resuelto?'<span style="font-size:9px;color:var(--ok)">✓ Cerrado</span>':`<button onclick="${closeRef}" style="font-size:9px;padding:2px 7px;border-radius:var(--r);background:var(--okb);border:1px solid var(--ok);color:var(--ok);cursor:pointer">Cerrar</button>`}
+      </div>
+    </div>
+    <div style="padding:10px 13px">
+      <div style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:5px">${h.desc}</div>
+      ${h.rec?`<div style="font-size:11px;color:var(--grn);margin-bottom:4px">→ ${h.rec}</div>`:''}
+      ${h.tec?`<div style="font-size:10px;color:var(--t3)">Técnico: ${h.tec}</div>`:''}
+    </div>
+  </div>`;
+}
+function clsInstH(id){if(instHall[id])INST_HR.child(id).update({resuelto:true});}
+function clsIngH(id) {if(ingHall[id])ING_HR.child(id).update({resuelto:true});}
+
+/* ═══════════════════════════════════════════════════
+   ATENCIONES LLAMADO
+═══════════════════════════════════════════════════ */
+function rAten() {
+  const ha=Object.values(ingAtens).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+  document.getElementById('aten-tot').textContent=ha.length;
+  const late=ha.filter(a=>a.tarde==='si'); const ok=ha.filter(a=>a.tarde!=='si');
+  document.getElementById('aten-ok').textContent=ok.length;
+  document.getElementById('aten-late').textContent=late.length;
+  const mins=ha.filter(a=>a.minutos).map(a=>+a.minutos);
+  const avg=mins.length?Math.round(mins.reduce((a,b)=>a+b,0)/mins.length):null;
+  document.getElementById('aten-avg').textContent=avg!==null?avg:'—';
+
+  const l=document.getElementById('aten-list');
+  if(!ha.length){
+    l.innerHTML=`<div class="aten-empty"><div class="aten-empty-icon">📞</div><div class="aten-empty-txt">Sin atenciones registradas — ${mkL(cm_val)}</div><div style="font-size:11px;color:var(--t3);margin-top:6px">Las atenciones ad-hoc aparecerán aquí</div></div>`;
+    return;
+  }
+  l.innerHTML=ha.map((a,i)=>{
+    const stripe=a.tarde==='si'?'#9b1c1c':'#2d6a4f';
+    const tardePill=a.tarde==='si'?`<span class="aten-pill aten-warn">⚠ Demorada (&gt;2h)</span>`:`<span class="aten-pill aten-ok">✓ A tiempo</span>`;
+    return `<div class="aten-card">
+      <div class="aten-stripe" style="background:${stripe}"></div>
+      <div class="aten-body">
+        <div class="aten-top">
+          <div>
+            <div class="aten-num">Atención #${ha.length-i}</div>
+            <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--navy);margin-top:2px">${a.sistema||'Sistema no especificado'}</div>
+          </div>
+          <div class="aten-fecha">${a.fecha||'—'}${a.hora?' · '+a.hora:''}</div>
+        </div>
+        <div class="aten-desc">${a.desc||''}</div>
+        ${a.accion?`<div style="font-size:11px;color:var(--grn);margin-bottom:6px;line-height:1.4">→ ${a.accion}</div>`:''}
+        <div class="aten-meta">
+          ${tardePill}
+          ${a.minutos?`<span class="aten-pill aten-sys">⏱ ${a.minutos} min respuesta</span>`:''}
+          ${a.tec?`<span class="aten-pill" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--t2)">👤 ${a.tec}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function oAtenModal(){
+  if(!canWrite()) return;
+  ['aten-fsys','aten-fdesc','aten-ftec','aten-faccion'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('aten-fmin').value='';
+  document.getElementById('aten-ffec').value=new Date().toISOString().split('T')[0];
+  document.getElementById('aten-fhora').value=new Date().toTimeString().slice(0,5);
+  document.getElementById('aten-ftarde').value='no';
+  document.getElementById('mc-aten').classList.add('open');
+}
+function saveAten(){
+  const sys=document.getElementById('aten-fsys').value.trim();
+  const desc=document.getElementById('aten-fdesc').value.trim();
+  if(!sys||!desc){alert('Sistema y descripción son obligatorios');return;}
+  const aid='a'+Date.now();
+  ING_AR.child(aid).set({
+    id:aid, sistema:sys, desc,
+    accion:document.getElementById('aten-faccion').value.trim(),
+    minutos:parseInt(document.getElementById('aten-fmin').value)||null,
+    tec:document.getElementById('aten-ftec').value.trim(),
+    fecha:document.getElementById('aten-ffec').value,
+    hora:document.getElementById('aten-fhora').value,
+    tarde:document.getElementById('aten-ftarde').value,
+    month:cm_val, ts:new Date().toLocaleString('es-CO')
+  });
+  cm('mc-aten');
+}
+
+/* ═══════════════════════════════════════════════════
+   REPORTES
+═══════════════════════════════════════════════════ */
+function rInstRep() {
+  const ca=Object.values(instCards), ha=Object.values(instHall);
+  const done=ca.filter(c=>c.status==='C'||c.status==='H');
+  const cc=done.length,tot=INST_AREAS.length,pct=tot>0?Math.round(cc/tot*100):0;
+  const ad=done.reduce((a,c)=>a+c.act,0),id2=done.reduce((a,c)=>a+c.ins,0),ml=mkL(cm_val);
+  const cov=`<div class="rcov"><div><div class="rce">>> INDUTRONICA × ADAMA</div><div class="rct">Informe de Mantenimiento No Invasivo</div><div class="rcsu">Instrumentación · Contrato de Administración y Soporte</div><div class="rcmo">${ml}</div></div><div class="rc-r" style="text-align:right"><div class="rcp">${pct}%</div><div class="rcpl">Avance del mes</div><div class="rcst">${cc}/${tot} áreas completadas<br>${ad}/${TACT} actuadores verificados<br>${id2}/${TINS} instrumentos verificados<br>${ha.length} hallazgo${ha.length!==1?'s':''} registrado${ha.length!==1?'s':''}</div></div></div>`;
+  const trows=INST_AREAS.map(a=>{const c=instCards[a.id]||{},st=c.status||'P',hc=ha.filter(h=>h.area===a.id).length,p=c.pct||0,sc={P:'sP',E:'sE',V:'sV',C:'sC',H:'sH'}[st]||'sP';return`<tr><td style="color:${CCOL[a.cat]};font-weight:600">${a.name}</td><td style="text-align:center;font-family:var(--fm)">${a.act}</td><td style="text-align:center;font-family:var(--fm)">${a.ins}</td><td style="font-family:var(--fm);font-size:10px">${c.fecha||'—'}</td><td style="font-size:11px">${c.tec||'—'}</td><td><span class="sbdg ${sc}">${SLAB[st]}</span></td><td style="text-align:center">${hc>0?`<span class="hbdg">${hc}</span>`:'—'}</td><td style="font-size:11px;color:var(--t2)">${c.obs||'—'}</td></tr>`;}).join('');
+  const etbl=`<div class="dc"><div class="dct">Registro de Ejecución — ${ml}</div><div style="overflow-x:auto"><table class="rtbl"><thead><tr><th>Área</th><th>Act.</th><th>Instr.</th><th>Fecha Ejec.</th><th>Técnico</th><th>Estado</th><th>Hallazgos</th><th>Observaciones</th></tr></thead><tbody>${trows}</tbody></table></div></div>`;
+  const hsec=hallSection(ha,ml);
+  const firmas=firmaBlock(['Ingeniero Indutronica','Coordinador de Servicio','Supervisor Adama']);
+  document.getElementById('inst-repcont').innerHTML=cov+etbl+hsec+firmas;
+}
+
+function rIngRep() {
+  const ca=Object.values(ingCards), ha=Object.values(ingHall), atns=Object.values(ingAtens);
+  const done=ca.filter(c=>c.status==='C'||c.status==='H');
+  const cc=done.length,tot=ING_TEMPLATE.length,pct=tot>0?Math.round(cc/tot*100):0,ml=mkL(cm_val);
+  const cov=`<div class="rcov"><div><div class="rce">>> INDUTRONICA × ADAMA</div><div class="rct">Informe de Mantenimiento No Invasivo</div><div class="rcsu">Ingeniería · Contrato de Administración y Soporte</div><div class="rcmo">${ml}</div></div><div class="rc-r" style="text-align:right"><div class="rcp" style="color:#a855f7">${pct}%</div><div class="rcpl">Avance del mes</div><div class="rcst">${cc}/${tot} ítems completados<br>${ha.length} hallazgo${ha.length!==1?'s':''} registrado${ha.length!==1?'s':''}<br>${atns.length} atención${atns.length!==1?'es':''} de llamado</div></div></div>`;
+  const trows=ING_TEMPLATE.map(t=>{const c=ingCards[t.id]||{},st=c.status||'P',hc=ha.filter(h=>h.area===t.id).length,sc={P:'sP',E:'sE',V:'sV',C:'sC',H:'sH'}[st]||'sP';return`<tr><td style="color:${ING_CCOL[t.cat]};font-weight:600">${t.name}</td><td style="font-family:var(--fm);font-size:10px">${t.cat}</td><td style="font-family:var(--fm);font-size:10px">${c.fecha||'—'}</td><td style="font-size:11px">${c.tec||'—'}</td><td><span class="sbdg ${sc}">${ING_SLAB[st]}</span></td><td style="text-align:center">${hc>0?`<span class="hbdg">${hc}</span>`:'—'}</td><td style="font-size:11px;color:var(--t2)">${c.obs||'—'}</td></tr>`;}).join('');
+  const etbl=`<div class="dc"><div class="dct">Registro de Actividades — ${ml}</div><div style="overflow-x:auto"><table class="rtbl"><thead><tr><th>Ítem</th><th>Cat.</th><th>Fecha</th><th>Ing./Tec.</th><th>Estado</th><th>Hallazgos</th><th>Observaciones</th></tr></thead><tbody>${trows}</tbody></table></div></div>`;
+  const hsec=hallSection(ha,ml);
+  // Atenciones table
+  let atnsec='';
+  if(atns.length){
+    const arows=atns.sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||'')).map(a=>`<tr><td style="font-family:var(--fm);font-size:10px">${a.fecha||'—'}</td><td style="font-size:12px">${a.sistema||''}</td><td style="font-size:11px;color:var(--t2)">${a.desc||''}</td><td style="font-size:11px">${a.tec||'—'}</td><td style="text-align:center;font-family:var(--fm)">${a.minutos||'—'}</td><td style="text-align:center"><span style="font-size:9px;color:${a.tarde==='si'?'#9b1c1c':'#2d6a4f'};border:1px solid ${a.tarde==='si'?'#9b1c1c':'#2d6a4f'};padding:2px 8px;border-radius:10px">${a.tarde==='si'?'Demorada':'A tiempo'}</span></td></tr>`).join('');
+    atnsec=`<div class="dc"><div class="dct">Atenciones de Llamado — ${ml}</div><div style="overflow-x:auto"><table class="rtbl"><thead><tr><th>Fecha</th><th>Sistema</th><th>Descripción</th><th>Atendió</th><th>Min.</th><th>Respuesta</th></tr></thead><tbody>${arows}</tbody></table></div></div>`;
+  }
+  const firmas=firmaBlock(['Ingeniero Indutronica','Coordinador de Servicio','Supervisor Adama']);
+  document.getElementById('ing-repcont').innerHTML=cov+etbl+atnsec+hsec+firmas;
+}
+
+function hallSection(ha,ml){
+  if(!ha.length)return`<div class="dc"><div class="dct">Hallazgos — ${ml}</div><div style="background:var(--okb);border:1px solid rgba(45,106,79,.3);border-radius:var(--r2);padding:16px;font-family:var(--fm);font-size:12px;color:var(--ok)">✓ Sin hallazgos registrados en ${ml}.</div></div>`;
+  const byA={};ha.forEach(h=>{if(!byA[h.area])byA[h.area]=[];byA[h.area].push(h);});
+  const hcards=Object.entries(byA).map(([aId,hs])=>{
+    const an=hs[0]?.areaName||aId,f=hs[0]?.fecha||'',t=hs[0]?.tec||'';
+    const items=hs.map(h=>`<div style="padding:8px 0;border-bottom:1px solid var(--bdr)"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px"><div><div style="font-family:var(--fm);font-size:11px;font-weight:500;color:var(--navy)">${h.tag}</div><div style="font-size:12px;color:var(--t2);margin-top:2px;line-height:1.5">${h.desc}</div>${h.rec?`<div style="font-size:11px;color:var(--grn);margin-top:3px"><strong>Recomendación:</strong> ${h.rec}</div>`:''}</div><span style="font-size:9px;color:${PC[h.prio||'Media']};border:1px solid ${PC[h.prio||'Media']};padding:2px 6px;border-radius:4px;font-family:var(--fm)">${h.prio||'Media'}</span></div><div style="font-size:10px;color:var(--t3);font-family:var(--fm);margin-top:3px">${h.resuelto?'✓ Cerrado':'Abierto'}</div></div>`).join('');
+    return`<div class="rhc"><div class="rhch"><div><div class="rhca">${an}</div><div class="rhcm">${f}${t?' · '+t:''}</div></div><span style="font-family:var(--fm);font-size:10px;background:var(--errb);color:var(--err);padding:2px 8px;border-radius:10px;border:1px solid rgba(155,28,28,.2)">${hs.length} hallazgo${hs.length>1?'s':''}</span></div><div class="rhcb">${items}</div></div>`;
+  }).join('');
+  return`<div class="dc"><div class="dct">Hallazgos del Mes — ${ml} <span style="font-family:var(--fm);font-size:11px;color:var(--t3);font-weight:400">(${ha.length} total)</span></div><div class="rhgrid">${hcards}</div></div>`;
+}
+function firmaBlock(roles){
+  return`<div class="dc"><div class="dct">Aprobación y Entrega del Informe</div><div class="fgrid">${roles.map(r=>`<div class="fbox"><div class="frole">${r}</div><div style="border-top:1px dashed var(--bdr2);padding-top:24px"><div class="fline">Nombre: ____________________</div><div class="fline">Firma: ____________________</div><div class="fline">Fecha: ____________________</div></div></div>`).join('')}</div></div>`;
+}
+
+function expInstHTML(){
+  const inner=document.getElementById('inst-repcont').innerHTML;
+  const blob=new Blob([`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Instrumentación ${cm_val}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f0f2ef;color:#1a1f1a;padding:20px}.dc{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:16px;margin-bottom:16px}.dct{font-size:13px;font-weight:700;color:#1A2E5A;margin-bottom:12px}.rcov{background:#1A2E5A;border-radius:12px;padding:24px 28px;color:#fff;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rce{font-size:9px;color:#52b788;letter-spacing:2px;margin-bottom:5px}.rct{font-size:22px;font-weight:800}.rcsu{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px}.rcmo{font-size:18px;font-weight:700;color:#00B5D8;margin-top:8px}.rcp{font-size:40px;font-weight:800;color:#52b788;line-height:1}.rcpl{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase}.rcst{font-size:10px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.8;text-align:right}table{width:100%;border-collapse:collapse;font-size:11px}th{padding:7px 9px;text-align:left;font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#8a9a8a;border-bottom:2px solid rgba(0,0,0,.1);background:#f6f8f5}td{padding:7px 9px;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}.sbdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:500}.sC{background:#d8f3dc;color:#2d6a4f;border:1px solid rgba(45,106,79,.3)}.sP{background:#e8ebe6;color:#8a9a8a;border:1px solid rgba(0,0,0,.1)}.sE{background:#fff1d6;color:#b5600a;border:1px solid rgba(181,96,10,.3)}.sH{background:#fde8e8;color:#9b1c1c;border:1px solid rgba(155,28,28,.3)}.hbdg{background:#fde8e8;color:#9b1c1c;font-size:9px;padding:2px 6px;border-radius:10px;border:1px solid rgba(155,28,28,.2)}.rhgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.rhc{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;overflow:hidden}.rhch{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:flex-start}.rhca{font-size:12px;font-weight:700;color:#1A2E5A}.rhcm{font-size:9px;color:#8a9a8a;margin-top:1px}.rhcb{padding:10px 12px;font-size:12px;color:#4a5a4a;line-height:1.6}.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.fbox{background:#f6f8f5;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:13px}.frole{font-size:12px;font-weight:700;color:#1A2E5A;margin-bottom:10px}.fline{font-size:10px;color:#8a9a8a;margin-top:6px}</style></head><body>${inner}</body></html>`],{type:'text/html'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Informe_Instrumentacion_${cm_val}.html`;a.click();
+}
+function expIngHTML(){
+  const inner=document.getElementById('ing-repcont').innerHTML;
+  const blob=new Blob([`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe Ingeniería ${cm_val}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#f0f2ef;color:#1a1f1a;padding:20px}.dc{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:16px;margin-bottom:16px}.dct{font-size:13px;font-weight:700;color:#6b21a8;margin-bottom:12px}.rcov{background:#1A2E5A;border-radius:12px;padding:24px 28px;color:#fff;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:16px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rce{font-size:9px;color:#a855f7;letter-spacing:2px;margin-bottom:5px}.rct{font-size:22px;font-weight:800}.rcsu{font-size:10px;color:rgba(255,255,255,.5);margin-top:2px}.rcmo{font-size:18px;font-weight:700;color:#00B5D8;margin-top:8px}.rcp{font-size:40px;font-weight:800;color:#a855f7;line-height:1}.rcpl{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:1px;text-transform:uppercase}.rcst{font-size:10px;color:rgba(255,255,255,.5);margin-top:8px;line-height:1.8;text-align:right}table{width:100%;border-collapse:collapse;font-size:11px}th{padding:7px 9px;text-align:left;font-size:9px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:#8a9a8a;border-bottom:2px solid rgba(0,0,0,.1);background:#f6f8f5}td{padding:7px 9px;border-bottom:1px solid rgba(0,0,0,.05);vertical-align:middle}.sbdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px}.sC{background:#d8f3dc;color:#2d6a4f}.sP{background:#e8ebe6;color:#8a9a8a}.sE{background:#fff1d6;color:#b5600a}.sH{background:#fde8e8;color:#9b1c1c}.hbdg{background:#fde8e8;color:#9b1c1c;font-size:9px;padding:2px 6px;border-radius:10px}.rhgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}.rhc{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;overflow:hidden}.rhch{padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.06);display:flex;justify-content:space-between;align-items:flex-start}.rhca{font-size:12px;font-weight:700;color:#6b21a8}.rhcm{font-size:9px;color:#8a9a8a;margin-top:1px}.rhcb{padding:10px 12px;font-size:12px;color:#4a5a4a;line-height:1.6}.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.fbox{background:#f6f8f5;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:13px}.frole{font-size:12px;font-weight:700;color:#6b21a8;margin-bottom:10px}.fline{font-size:10px;color:#8a9a8a;margin-top:6px}</style></head><body>${inner}</body></html>`],{type:'text/html'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Informe_Ingenieria_${cm_val}.html`;a.click();
+}
+
+/* ═══════════════════════════════════════════════════
+   POPULATE SELECTS
+═══════════════════════════════════════════════════ */
+function popSels(){
+  // Inst areas selects
+  ['inst-fa','inst-rharea'].forEach(sId=>{
+    const sel=document.getElementById(sId); if(!sel)return;
+    sel.innerHTML='<option value="">— Seleccionar —</option>';
+    INST_AREAS.forEach(a=>{const o=document.createElement('option');o.value=a.id;o.textContent=`${a.name}`;sel.appendChild(o);});
+  });
+  // Ing items selects
+  ['ing-fa','ing-rharea'].forEach(sId=>{
+    const sel=document.getElementById(sId); if(!sel)return;
+    sel.innerHTML='<option value="">— Seleccionar ítem —</option>';
+    ING_TEMPLATE.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=`${t.name} [${t.cat}]`;sel.appendChild(o);});
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════════════ */
+const tick=()=>{
+  document.getElementById('clock').textContent=new Date().toLocaleString('es-CO',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+};
+setInterval(tick,1000); tick();
+
+/* ═══════════════════════════════════════════════════
+   ROLE / PIN SYSTEM
+   Roles: admin (PIN 1234) | tecnico (PIN 5678) | lectura (no PIN)
+   PINs stored only in memory — sessionStorage saves role after login.
+═══════════════════════════════════════════════════ */
+const ROLE_PINS = { admin:'1234', tecnico:'5678', lectura:null };
+const ROLE_LABELS = { admin:'ADMIN', tecnico:'TÉCNICO', lectura:'SOLO LECTURA' };
+const ROLE_BADGE_CLS = { admin:'admin', tecnico:'tecnico', lectura:'lectura' };
+// Which actions each role can do: 'write' = create/edit, 'admin' = everything
+const ROLE_CAPS = { admin:'admin', tecnico:'write', lectura:'read' };
+
+let currentRole = null;
+let pendingRole = 'lectura';
+
+function selectRole(r) {
+  pendingRole = r;
+  ['admin','tecnico','lectura'].forEach(x=>{
+    document.getElementById('rb-'+x).classList.toggle('selected', x===r);
+  });
+  const needsPin = ROLE_PINS[r] !== null;
+  document.getElementById('pin-row').style.display = needsPin ? 'flex' : 'none';
+  document.getElementById('pin-err').textContent = '';
+  if(needsPin) setTimeout(()=>document.getElementById('pin-input').focus(), 80);
+}
+
+function doLogin() {
+  const r = pendingRole;
+  const pin = document.getElementById('pin-input').value;
+  const errEl = document.getElementById('pin-err');
+  if(ROLE_PINS[r] !== null && pin !== ROLE_PINS[r]) {
+    errEl.textContent = '✕ PIN incorrecto';
+    document.getElementById('pin-input').value = '';
+    document.getElementById('pin-input').focus();
+    return;
+  }
+  errEl.textContent = '';
+  document.getElementById('pin-input').value = '';
+  applyRole(r);
+  document.getElementById('login-screen').classList.add('hidden');
+  sessionStorage.setItem('ni_role', r);
+}
+
+function showLogin() {
+  selectRole(currentRole||'lectura');
+  document.getElementById('login-screen').classList.remove('hidden');
+}
+
+function applyRole(r) {
+  currentRole = r;
+  const cap = ROLE_CAPS[r];
+  // Update badge
+  const badge = document.getElementById('role-badge');
+  badge.textContent = ROLE_LABELS[r];
+  badge.className = 'role-badge ' + ROLE_BADGE_CLS[r];
+  // Apply write-lock to all action elements
+  const writeEls = document.querySelectorAll('.write-action');
+  writeEls.forEach(el => {
+    el.classList.toggle('action-locked', cap === 'read');
+  });
+  // Admin-only elements
+  const adminEls = document.querySelectorAll('.admin-action');
+  adminEls.forEach(el => {
+    el.classList.toggle('action-locked', cap !== 'admin');
+  });
+}
+
+function initRoleSession() {
+  const saved = sessionStorage.getItem('ni_role');
+  if(saved && ROLE_PINS[saved] !== undefined) {
+    applyRole(saved);
+    document.getElementById('login-screen').classList.add('hidden');
+  } else {
+    // Default: show login, pre-select lectura
+    selectRole('lectura');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+buildMopts();
+popSels();
+document.getElementById('sb-month-lbl').textContent=mkL(cm_val);
+initRoleSession();
+listenAll();
+</script>
+</body>
+</html>
