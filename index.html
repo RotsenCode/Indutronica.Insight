@@ -333,6 +333,57 @@ body{font-family:var(--fb);background:var(--bg);color:var(--txt);min-height:100v
 ::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
 
 /* ─── PRINT ─── */
+
+/* ─── MOBILE RESPONSIVE ─── */
+@media(max-width:768px){
+  .tb{height:48px;padding:0 12px}
+  .tbc,.tbada,.tbtag,.tbclk{display:none}
+  .tbi{font-size:13px}
+  .app-body{flex-direction:column}
+  .sidebar{position:fixed;top:0;left:-280px;width:280px;height:100vh;z-index:300;transition:left .28s ease;box-shadow:none}
+  .sidebar.open{left:0;box-shadow:4px 0 24px rgba(0,0,0,.25)}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:299}
+  .sidebar-overlay.open{display:block}
+  .main{width:100%;padding-bottom:64px}
+  .ham{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:6px;border:none;background:none;margin-right:auto}
+  .ham span{width:20px;height:2px;background:#fff;border-radius:2px;display:block}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;height:56px;background:var(--sur);border-top:1px solid var(--bdr2);z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,.1);justify-content:space-around}
+  .bn-item{flex:0 0 auto;width:25%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:none;background:none;color:var(--t3);font-family:var(--fm);font-size:8px;padding:6px 2px;transition:color .2s;position:relative}
+  .bn-item.active{color:var(--navy)}.bn-item.inst-active{color:var(--ok)}.bn-item.ing-active{color:var(--ing)}
+  .bn-icon{font-size:19px;line-height:1}
+  .bn-badge{position:absolute;top:4px;right:calc(50% - 18px);font-family:var(--fm);font-size:7px;background:var(--err);color:#fff;padding:1px 4px;border-radius:10px;min-width:14px;text-align:center;display:none}
+  .bn-badge.vis{display:block}
+  .dash-wrap{padding:10px 12px;gap:12px}
+  .krow{gap:8px}
+  .kc{min-width:80px;padding:10px 12px}
+  .kv{font-size:20px}
+  .dr2{grid-template-columns:1fr}
+  .gauge-block{padding:12px}
+  .gauge-3col{grid-template-columns:1fr!important}
+  .ktop{padding:10px 12px 0;flex-direction:column;gap:8px}
+  .kctrl{width:100%}
+  .board{padding:10px 12px 20px;gap:10px}
+  .kcol{min-width:220px}
+  .pgw{padding:6px 12px 0}
+  .kst{padding:4px 12px 0}
+  .ptbl{font-size:10px}
+  .ptbl th,.ptbl td{padding:5px 6px}
+  .rhdr{padding:12px 16px}
+  .hallbody-wrap{padding:12px 16px}
+  .rhgrid{grid-template-columns:1fr}
+  .rbody{padding:12px 16px;gap:12px}
+  .rcov{padding:16px;flex-direction:column}
+  .rcp{font-size:28px}
+  .fgrid{grid-template-columns:1fr}
+  .mdl{width:100vw;max-width:100vw;max-height:90vh;border-radius:var(--r3) var(--r3) 0 0;position:fixed;bottom:0;left:0;margin:0}
+  .mov{align-items:flex-end}
+  .aten-list{padding:10px 12px}
+}
+@media(min-width:769px){
+  .ham{display:none}
+  .bottom-nav{display:none}
+  .sidebar-overlay{display:none}
+}  
 @media print{.sidebar,.tb,.ph-actions,.no-print{display:none!important}.rbody{padding:0}.rcov{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 </style>
 </head>
@@ -392,6 +443,7 @@ const db = firebase.database();
 </div>
 
 <!-- ═══════════════ TOPBAR ═══════════════ -->
+ <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
 <div class="tb">
   <div class="tb-l">
     <div style="display:flex;flex-direction:column">
@@ -407,6 +459,7 @@ const db = firebase.database();
       <div id="sdot" class="sdot"></div>
       <span id="slbl" class="slbl">Conectando…</span>
     </div>
+    <button class="ham" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
     <select id="msel" class="msel" onchange="chMonth(this.value)"></select>
     <div class="tbtag">MENSUAL</div>
     <button class="role-badge" id="role-badge" onclick="showLogin()" title="Cambiar rol">—</button>
@@ -552,47 +605,33 @@ const db = firebase.database();
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
           <div class="gauge-block">
             <div class="gauge-block-title">
-              Simatic Batch
-              <span class="gbt-pill" style="background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)">Ítems</span>
-            </div>
-            <div class="gpair">
-              <div class="gwrap">
-                <div class="gsub">Ítems completados</div>
-                <canvas id="cvb-dash" width="180" height="108"></canvas>
-                <div class="gbv" id="gbv-batch-dash">0</div>
-                <div class="gdl ing-color" id="gdb-dash">de 3 líneas</div>
-              </div>
-            </div>
-          </div>
-          <div class="gauge-block">
-            <div class="gauge-block-title">
               Servidores
-              <span class="gbt-pill" style="background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.2)">Estado</span>
-            </div>
-            <div class="gpair">
-              <div class="gwrap">
-                <div class="gsub">Revisiones completadas</div>
-                <canvas id="cvs-dash" width="180" height="108"></canvas>
-                <div class="gbv" id="gbv-srv-dash">0</div>
-                <div class="gdl" id="gds-dash">de 5 servidores</div>
-              </div>
-            </div>
-          </div>
-          <div class="gauge-block">
-            <div class="gauge-block-title">
-              Backups
-              <span class="gbt-pill" style="background:var(--okb);color:var(--ok);border:1px solid rgba(45,106,79,.2)">Estado</span>
-            </div>
-            <div class="gpair">
-              <div class="gwrap">
-                <div class="gsub">Backups completados</div>
-                <canvas id="cvk-dash" width="180" height="108"></canvas>
-                <div class="gbv" id="gbv-bkp-dash">0</div>
-                <div class="gdl" id="gdk-dash">de 4 backups</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <span class="gbt-pill" style="background:var(--infb);color:var(--inf);border:1px solid rgba(30,111,168,.2)">Estado</span>
+    </div>
+    <div class="gpair">
+      <div class="gwrap">
+        <div class="gsub">Revisiones completadas</div>
+        <canvas id="cvs-dash" width="180" height="108"></canvas>
+        <div class="gbv" id="gbv-srv-dash">0</div>
+        <div class="gdl" id="gds-dash">de 3 servidores</div>
+      </div>
+    </div>
+  </div>
+  <div class="gauge-block">
+    <div class="gauge-block-title">
+      Clientes
+      <span class="gbt-pill" style="background:#fef3c7;color:#b45309;border:1px solid rgba(180,83,9,.2)">Estado</span>
+    </div>
+    <div class="gpair">
+      <div class="gwrap">
+        <div class="gsub">Revisiones completadas</div>
+        <canvas id="cvc-dash" width="180" height="108"></canvas>
+        <div class="gbv" id="gbv-cli-dash">0</div>
+        <div class="gdl" style="color:#b45309" id="gdc-dash">de 4 clientes</div>
+      </div>
+    </div>
+  </div>
+</div>
 
         <!-- Tabla progreso Ingeniería -->
         <div class="dc">
@@ -617,6 +656,7 @@ const db = firebase.database();
           <div class="fgrp" id="inst-kflt">
             <button class="fb on" data-f="ALL" onclick="instKF(this,'ALL')">Todas</button>
             <button class="fb" data-f="HSC"  onclick="instKF(this,'HSC')">Herbicidas SC</button>
+            <button class="fb" data-f="INSC" onclick="instKF(this,'INSC')">Insecticidas</button>
             <button class="fb" data-f="PARQ" onclick="instKF(this,'PARQ')">Parque Solv.</button>
             <button class="fb" data-f="REAC" onclick="instKF(this,'REAC')">Reactores</button>
             <button class="fb" data-f="FORM" onclick="instKF(this,'FORM')">Formuladores</button>
@@ -667,9 +707,8 @@ const db = firebase.database();
         <div class="kctrl">
           <div class="fgrp" id="ing-kflt">
             <button class="fb on" data-f="ALL" onclick="ingKF(this,'ALL')">Todos</button>
-            <button class="fb" data-f="BATCH" onclick="ingKF(this,'BATCH')">Simatic Batch</button>
             <button class="fb" data-f="SRV"   onclick="ingKF(this,'SRV')">Servidores</button>
-            <button class="fb" data-f="BKP"   onclick="ingKF(this,'BKP')">Backups</button>
+            <button class="fb" data-f="CLI"   onclick="ingKF(this,'CLI')">Clientes</button>
           </div>
           <button class="badd ing-btn write-action" onclick="oIngAC(null)">✎ Registrar Avance</button>
         </div>
@@ -913,27 +952,25 @@ const INST_AREAS = [
   {id:'BASC', name:'Tanque Báscula 2-Ehe',      cat:'UTIL', act:3,  ins:3},
   {id:'UTIL', name:'Utilities',                 cat:'UTIL', act:1,  ins:5},
   {id:'ALMC', name:'Tanque Almacenamiento 50k', cat:'UTIL', act:0,  ins:1},
+  {id:'INSC', name:'Insecticidas',              cat:'INSC', act:0,  ins:19},
 ];
-const TACT=200, TINS=145;
+const TACT=200, TINS=164;
 
 // Ingeniería items — se crean al inicio del mes
 const ING_TEMPLATE = [
-  {id:'BATCH_SLR', name:'SLURRY — Simatic Batch',       cat:'BATCH', meta:'118 lotes/mes', lotes:118},
-  {id:'BATCH_R78', name:'REACTORES 7Y8 — Simatic Batch', cat:'BATCH', meta:'118 lotes/mes', lotes:118},
-  {id:'BATCH_PRO', name:'PROPANIL — Simatic Batch',      cat:'BATCH', meta:'28 lotes/mes',  lotes:28},
-  {id:'SRV_BATCH', name:'Servidor Simatic Batch',        cat:'SRV',   meta:'Revisión mensual'},
-  {id:'SRV_PCS82', name:'Servidor PCS7 v8.2',            cat:'SRV',   meta:'Revisión mensual'},
-  {id:'SRV_PCS91', name:'Servidor PCS7 v9.1',            cat:'SRV',   meta:'Revisión mensual'},
-  {id:'SRV_ROB',   name:'Robot Estibador',               cat:'SRV',   meta:'Respaldo sistema'},
-  {id:'SRV_ENC',   name:'Encajadora Prosystem',          cat:'SRV',   meta:'Respaldo sistema'},
-  {id:'BKP_PLSRY', name:'Backup Polipasto Slurry',       cat:'BKP',   meta:'Backup mensual'},
-  {id:'BKP_PLAMI', name:'Backup Polipasto Aminol',       cat:'BKP',   meta:'Backup mensual'},
-  {id:'BKP_PLHSC', name:'Backup Polipasto Herb SC',      cat:'BKP',   meta:'Backup mensual'},
-  {id:'BKP_MOLNO', name:'Backup Molino Netzsch',         cat:'BKP',   meta:'Backup mensual'},
-];
+    {id:'SRV_A', name:'Servidor A',        cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_B', name:'Servidor B',        cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_AMI', name:'Servidor Aminol',            cat:'SRV',   meta:'Revisión mensual'},
+  {id:'CLI_1', name:'Cliente 1 Producción', cat:'CLI', meta:'Revisión mensual', lotes:0},
+  {id:'CLI_2',     name:'Cliente 2 Síntesis',             cat:'CLI',   meta:'Revisión mensual'},
+  {id:'CLI_3',     name:'Cliente 3 Herbicidas SC',        cat:'CLI',   meta:'Revisión mensual'},
+  {id:'CLI_4',     name:'Cliente 4 Insecticidas',         cat:'CLI',   meta:'Revisión mensual'},
+  {id:'CLI_5',     name:'Cliente 5 Manto & Ingeniería',   cat:'CLI',   meta:'Revisión mensual'},
+  {id:'CLI_6', name:'Cliente 6 Aminol',     cat:'CLI', meta:'Revisión mensual', lotes:0},
+  ];
 
 const CCOL = {HSC:'#0369a1',PARQ:'#9d174d',REAC:'#1e6fa8',FORM:'#065f46',UTIL:'#374151'};
-const ING_CCOL = {BATCH:'#6b21a8',SRV:'#0369a1',BKP:'#065f46'};
+const ING_CCOL = {SRV:'#0369a1',CLI:'#b45309'};
 const SACC = {P:'#94a3b8',E:'#f6b042',V:'#00B5D8',C:'#2d6a4f',H:'#9b1c1c'};
 const ING_SACC = {P:'#94a3b8',E:'#f6b042',V:'#9333ea',C:'#2d6a4f',H:'#9b1c1c'};
 const SLAB = {P:'Programado',E:'En Ejecución',V:'Verif. PCS7',C:'Completado',H:'Con Hallazgo'};
@@ -1153,59 +1190,50 @@ function rDash() {
   document.getElementById('dash-ptbl').innerHTML =
     `<thead><tr><th>Área</th><th>Act.</th><th>Instr.</th><th>Estado</th><th>Fecha</th><th>Técnico</th><th>Progreso</th><th>Hall.</th></tr></thead><tbody>${rows}</tbody>`;
 
-  // --- INGENIERÍA ---
-  const ingCA = Object.values(ingCards);
-  const ingDone = ingCA.filter(c=>c.status==='C'||c.status==='H');
-  const ingCC = ingDone.length, ingTot = ING_TEMPLATE.length;
-  const ingPct = ingTot>0?Math.round(ingCC/ingTot*100):0;
-  const hcIng = Object.keys(ingHall).length;
-  const atnCnt = Object.keys(ingAtens).length;
+  /* -- INGENIERÍA -- */
+  const gCA=Object.values(ingCards);
+  const gDone=gCA.filter(c=>c.status==='C'||c.status==='H');
+  const gCC=gDone.length,gTot=ING_TEMPLATE.length,gPct=gTot>0?Math.round(gCC/gTot*100):0;
+  const hcIng=Object.keys(ingHall).length,atnCnt=Object.keys(ingAtens).length;
 
-  document.getElementById('dash-ing-kpis').innerHTML =
-    kpiCard('Ítems del mes',    ingTot,  'Batch + Srv + Bkp','') +
-    kpiCard('Completados',      ingCC,   ingPct+'% del total','var(--ing)') +
-    kpiCard('Hallazgos',        hcIng,   ml,'var(--err)') +
-    kpiCard('Atenciones llamado',atnCnt, ml,'var(--ing2)');
+  document.getElementById('dash-ing-kpis').innerHTML=
+    kpiCard('Ítems del mes',gTot,'Srv + Cli','')+
+    kpiCard('Completados',gCC,gPct+'% del total','var(--ing)')+
+    kpiCard('Hallazgos',hcIng,ml,'var(--err)')+
+    kpiCard('Atenciones',atnCnt,ml,'var(--ing2)');
 
-  // 3 gauges Ingeniería
-  const batchItems = ingCA.filter(c=>c.cat==='BATCH');
-  const srvItems   = ingCA.filter(c=>c.cat==='SRV');
-  const bkpItems   = ingCA.filter(c=>c.cat==='BKP');
-  const batchDone  = batchItems.filter(c=>c.status==='C'||c.status==='H').length;
-  const srvDone    = srvItems.filter(c=>c.status==='C'||c.status==='H').length;
-  const bkpDone    = bkpItems.filter(c=>c.status==='C'||c.status==='H').length;
+  const srvItems=gCA.filter(c=>c.cat==='SRV');
+  const cliItems=gCA.filter(c=>c.cat==='CLI');
+  const srvDone=srvItems.filter(c=>c.status==='C'||c.status==='H').length;
+  const cliDone=cliItems.filter(c=>c.status==='C'||c.status==='H').length;
 
-  drawG('cvb-dash', batchDone, batchItems.length||3, '#9333ea');
-  document.getElementById('gbv-batch-dash').textContent = batchDone;
-  document.getElementById('gdb-dash').textContent = `de ${batchItems.length} líneas Batch`;
+  document.getElementById('gbv-srv-dash').textContent=srvDone;
+  document.getElementById('gds-dash').textContent=`de ${srvItems.length} servidores`;
+  document.getElementById('gbv-cli-dash').textContent=cliDone;
+  document.getElementById('gdc-dash').textContent=`de ${cliItems.length} clientes`;
+  setTimeout(()=>{
+    drawG('cvs-dash',srvDone,srvItems.length||3,'#0369a1');
+    drawG('cvc-dash',cliDone,cliItems.length||4,'#b45309');
+  },30);
 
-  drawG('cvs-dash', srvDone, srvItems.length||5, '#1e6fa8');
-  document.getElementById('gbv-srv-dash').textContent = srvDone;
-  document.getElementById('gds-dash').textContent = `de ${srvItems.length} servidores`;
-
-  drawG('cvk-dash', bkpDone, bkpItems.length||4, '#2d6a4f');
-  document.getElementById('gbv-bkp-dash').textContent = bkpDone;
-  document.getElementById('gdk-dash').textContent = `de ${bkpItems.length} backups`;
-
-  // Tabla progreso Ingeniería
-  document.getElementById('dash-ing-month-lbl').textContent = ml;
-  const ingRows = ING_TEMPLATE.map(t => {
-    const c=ingCards[t.id]||{}, st=c.status||'P';
+  /* -- Tabla SRV + CLI -- */
+  document.getElementById('dash-ing-month-lbl').textContent=ml;
+  const ingRows=ING_TEMPLATE.filter(t=>t.cat==='SRV'||t.cat==='CLI').map(t=>{
+    const c=ingCards[t.id]||{},st=c.status||'P';
     const hct=Object.values(ingHall).filter(h=>h.area===t.id).length;
-    const sc={P:'sP',E:'sE',V:'sV',C:'sC',H:'sH'}[st]||'sP';
     const catCol=ING_CCOL[t.cat]||'#374151';
     return `<tr>
       <td style="color:${catCol};font-weight:600">${t.name}</td>
-      <td style="text-align:center;font-family:var(--fm)"><span style="font-size:9px;background:var(--ingb);color:var(--ing);padding:1px 6px;border-radius:8px;border:1px solid rgba(107,33,168,.2)">${t.cat}</span></td>
-      <td><span class="sbdg ${sc}">${ING_SLAB[st]}</span></td>
+      <td><span style="font-size:9px;background:var(--ingb);color:${catCol};padding:1px 6px;border-radius:8px;border:1px solid rgba(107,33,168,.2)">${t.cat}</span></td>
+      <td><span class="sbdg s${st}">${ING_SLAB[st]}</span></td>
       <td style="font-family:var(--fm);font-size:10px">${c.fecha||'—'}</td>
       <td style="font-size:11px">${c.tec||'—'}</td>
       <td style="font-size:11px;color:var(--t2)">${c.obs||'—'}</td>
       <td style="text-align:center">${hct>0?`<span class="hbdg">${hct}</span>`:'—'}</td>
     </tr>`;
   }).join('');
-  document.getElementById('dash-ing-ptbl').innerHTML =
-    `<thead><tr><th>Ítem</th><th>Cat.</th><th>Estado</th><th>Fecha</th><th>Ingeniero</th><th>Observaciones</th><th>Hall.</th></tr></thead><tbody>${ingRows}</tbody>`;
+  document.getElementById('dash-ing-ptbl').innerHTML=
+    `<thead><tr><th>Equipo</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th>Ing.</th><th>Observaciones</th><th>Hall.</th></tr></thead><tbody>${ingRows}</tbody>`;
 }
 
 function kpiCard(label, value, sub, col) {
@@ -1716,7 +1744,7 @@ setInterval(tick,1000); tick();
    Roles: admin (PIN 1234) | tecnico (PIN 5678) | lectura (no PIN)
    PINs stored only in memory — sessionStorage saves role after login.
 ═══════════════════════════════════════════════════ */
-const ROLE_PINS = { admin:'1234', tecnico:'5678', lectura:null };
+const ROLE_PINS = { admin:'1941', tecnico:'1969', lectura:null };
 const ROLE_LABELS = { admin:'ADMIN', tecnico:'TÉCNICO', lectura:'SOLO LECTURA' };
 const ROLE_BADGE_CLS = { admin:'admin', tecnico:'tecnico', lectura:'lectura' };
 // Which actions each role can do: 'write' = create/edit, 'admin' = everything
@@ -1796,6 +1824,51 @@ popSels();
 document.getElementById('sb-month-lbl').textContent=mkL(cm_val);
 initRoleSession();
 listenAll();
+</script>
+<nav class="bottom-nav">
+  <button class="bn-item" id="bn-menu" onclick="toggleSidebar()">
+    <span class="bn-icon">☰</span><span>Menú</span>
+  </button>
+  <button class="bn-item active" id="bn-dash" onclick="sw('dash');updateBN('dash')">
+    <span class="bn-icon">◉</span><span>Dashboard</span>
+  </button>
+  <button class="bn-item" id="bn-inst" onclick="sw('inst-kanban');updateBN('inst')">
+    <span class="bn-icon">🔧</span><span>Inst.</span>
+    <span class="bn-badge" id="bni-inst"></span>
+  </button>
+  <button class="bn-item" id="bn-ing" onclick="sw('ing-kanban');updateBN('ing')">
+    <span class="bn-icon">⚙️</span><span>Ing.</span>
+    <span class="bn-badge" id="bni-ing"></span>
+  </button>
+</nav>
+<script>
+function toggleSidebar(){
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
+function updateBN(section){
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('active','inst-active','ing-active'));
+  const map={dash:'bn-dash',inst:'bn-inst',ing:'bn-ing'};
+  const btn=document.getElementById(map[section]);
+  if(!btn)return;
+  if(section==='dash')btn.classList.add('active');
+  else if(section==='inst')btn.classList.add('inst-active');
+  else btn.classList.add('ing-active');
+  closeSidebar();
+}
+// Patch sw() to also update bottom nav and close sidebar on mobile
+const _sw=sw;
+window.sw=function(v){
+  _sw(v);
+  if(v==='dash')updateBN('dash');
+  else if(v.startsWith('inst'))updateBN('inst');
+  else if(v.startsWith('ing'))updateBN('ing');
+  closeSidebar();
+};
 </script>
 </body>
 </html>
