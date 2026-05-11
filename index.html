@@ -579,7 +579,7 @@ const db = firebase.database();
                 <div class="gsub" id="gsubi-dash">Verificados este mes</div>
                 <canvas id="cvi-dash" width="200" height="120"></canvas>
                 <div class="gbv" id="gbv-ins-dash">0</div>
-                <div class="gdl" id="gdi-dash">— / 145</div>
+                <div class="gdl" id="gdi-dash">— / 164</div>
               </div>
             </div>
           </div>
@@ -958,15 +958,15 @@ const TACT=200, TINS=164;
 
 // Ingeniería items — se crean al inicio del mes
 const ING_TEMPLATE = [
-    {id:'SRV_A', name:'Servidor A',        cat:'SRV',   meta:'Revisión mensual'},
-  {id:'SRV_B', name:'Servidor B',        cat:'SRV',   meta:'Revisión mensual'},
-  {id:'SRV_AMI', name:'Servidor Aminol',            cat:'SRV',   meta:'Revisión mensual'},
-  {id:'CLI_1', name:'Cliente 1 Producción', cat:'CLI', meta:'Revisión mensual', lotes:0},
+    {id:'SRV_A',   name:'Servidor A',                     cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_B',     name:'Servidor B',                     cat:'SRV',   meta:'Revisión mensual'},
+  {id:'SRV_AMI',   name:'Servidor Aminol',                cat:'SRV',   meta:'Revisión mensual'},
+  {id:'CLI_1',     name:'Cliente 1 Producción',           cat:'CLI',   meta:'Revisión mensual', lotes:0},
   {id:'CLI_2',     name:'Cliente 2 Síntesis',             cat:'CLI',   meta:'Revisión mensual'},
   {id:'CLI_3',     name:'Cliente 3 Herbicidas SC',        cat:'CLI',   meta:'Revisión mensual'},
   {id:'CLI_4',     name:'Cliente 4 Insecticidas',         cat:'CLI',   meta:'Revisión mensual'},
   {id:'CLI_5',     name:'Cliente 5 Manto & Ingeniería',   cat:'CLI',   meta:'Revisión mensual'},
-  {id:'CLI_6', name:'Cliente 6 Aminol',     cat:'CLI', meta:'Revisión mensual', lotes:0},
+  {id:'CLI_6',     name:'Cliente 6 Aminol',               cat:'CLI',   meta:'Revisión mensual', lotes:0},
   ];
 
 const CCOL = {HSC:'#0369a1',PARQ:'#9d174d',REAC:'#1e6fa8',FORM:'#065f46',UTIL:'#374151'};
@@ -1158,7 +1158,7 @@ function rDash() {
   const hcI = Object.keys(instHall).length;
 
   document.getElementById('dash-inst-kpis').innerHTML =
-    kpiCard('Áreas del mes',  tot,  '19 áreas contrato','') +
+    kpiCard('Áreas del mes',  tot,  '20 áreas contrato','') +
     kpiCard('Completadas',    cc,   pct+'% del total','var(--ok)') +
     kpiCard('Actuadores ✓',   ad,   `de ${TACT} totales`,'var(--inf)') +
     kpiCard('Instrumentos ✓', id2,  `de ${TINS} totales`,'var(--grn)') +
