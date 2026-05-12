@@ -1471,7 +1471,7 @@ function saveInstC() {
   const status=document.getElementById('inst-fst').value;
   fu(INST_CR.child(aId),{...base,id:aId,name:area.name||base.name,cat:area.cat||base.cat,act:area.act||base.act,ins:area.ins||base.ins,pct:parseInt(document.getElementById('inst-fpct').value)||0,status,fecha:document.getElementById('inst-ffec').value,tec:document.getElementById('inst-ftec').value.trim(),obs:document.getElementById('inst-fobs').value.trim(),month:cm_val,ts:status==='C'?new Date().toLocaleString('es-CO'):base.ts||''});
   Object.entries(instHall).forEach(([k,h])=>{if(h.area===aId)INST_HR.child(k).remove();});
-  instTempH.forEach(h=>{const hid=h.id||('h'+Date.now());INST_HR.child(hid).set({...h,id:hid,area:aId,areaName:area.name||base.name,month:cm_val,fecha:document.getElementById('inst-ffec').value,tec:document.getElementById('inst-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
+  instTempH.forEach((h,idx)=>{const hid=h.id||('h'+Date.now()+'_'+idx);INST_HR.child(hid).set({...h,id:hid,area:aId,areaName:area.name||base.name,month:cm_val,fecha:document.getElementById('inst-ffec').value,tec:document.getElementById('inst-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
   cm('mc-inst');
 }
 
@@ -1526,7 +1526,7 @@ function saveIngC(){
   const status=document.getElementById('ing-fst').value;
   fu(ING_CR.child(iId),{...base,id:iId,name:tmpl.name||base.name,cat:tmpl.cat||base.cat,meta:tmpl.meta||base.meta,lotes:tmpl.lotes||base.lotes||0,status,fecha:document.getElementById('ing-ffec').value,tec:document.getElementById('ing-ftec').value.trim(),obs:document.getElementById('ing-fobs').value.trim(),month:cm_val,ts:status==='C'?new Date().toLocaleString('es-CO'):base.ts||''});
   Object.entries(ingHall).forEach(([k,h])=>{if(h.area===iId)ING_HR.child(k).remove();});
-  ingTempH.forEach(h=>{const hid=h.id||('h'+Date.now());ING_HR.child(hid).set({...h,id:hid,area:iId,areaName:tmpl.name||base.name,month:cm_val,fecha:document.getElementById('ing-ffec').value,tec:document.getElementById('ing-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
+  ingTempH.forEach((h,idx)=>{const hid=h.id||('h'+Date.now()+'_'+idx);ING_HR.child(hid).set({...h,id:hid,area:iId,areaName:tmpl.name||base.name,month:cm_val,fecha:document.getElementById('ing-ffec').value,tec:document.getElementById('ing-ftec').value.trim(),ts:new Date().toLocaleString('es-CO'),resuelto:false});});
   cm('mc-ing');
 }
 
