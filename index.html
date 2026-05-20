@@ -1267,7 +1267,8 @@ function rDash() {
     kpiCard('Completados',gCC,gPct+'% del total','var(--ing)')+
     kpiCard('Hallazgos',hcIng,ml,'var(--err)')+
     kpiCard('Atenciones',atnCnt,ml,'var(--ing2)');
-    
+    kpiCard('Capacitaciones',capReal+'/2','meta mensual','var(--ing)');
+  
   const srvItems=gCA.filter(c=>c.cat==='SRV');
   const cliItems=gCA.filter(c=>c.cat==='CLI');
   const srvDone=srvItems.filter(c=>c.status==='C'||c.status==='H').length;
