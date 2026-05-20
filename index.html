@@ -1299,7 +1299,6 @@ function rDash() {
     setTimeout(()=>drawG('cvcp-dash',capReal,2,'#9333ea'),30);
   });
 }
-
   /* -- INGENIERÍA -- */
   const gCA=Object.values(ingCards);
   const gDone=gCA.filter(c=>c.status==='C'||c.status==='H');
@@ -1312,7 +1311,6 @@ function rDash() {
     kpiCard('Hallazgos',hcIng,ml,'var(--err)')+
     kpiCard('Atenciones',atnCnt,ml,'var(--ing2)');
     kpiCard('Capacitaciones',capReal2+'/2','meta mensual','var(--ing)');
-  });
 
   const srvItems=gCA.filter(c=>c.cat==='SRV');
   const cliItems=gCA.filter(c=>c.cat==='CLI');
