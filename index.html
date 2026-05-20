@@ -814,6 +814,9 @@ const db = firebase.database();
           <div class="f2">
             <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="inst-hprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
             <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="inst-hrec" placeholder="Acción recomendada…"></div>
+          <div class="f2">
+            <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="inst-rhaviso" placeholder="ej. AVS-2026-001"></div>
+            <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="inst-rhestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
           </div>
           <button class="btn bts" style="align-self:flex-end" onclick="addInstHI()">Agregar Hallazgo</button>
         </div>
@@ -839,7 +842,10 @@ const db = firebase.database();
       <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="inst-rhdesc" placeholder="Descripción del hallazgo…"></textarea></div>
       <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="inst-rhrec" placeholder="Acción recomendada…"></div>
       <div class="fg"><label class="fl">Técnico que reporta</label><input class="fi" id="inst-rhtec" placeholder="Nombre"></div>
-    </div>
+  <div class="f2">
+     <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="inst-rhaviso" placeholder="ej. AVS-2026-001"></div>
+     <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="inst-rhestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
+  </div>
     <div class="mftr"><button class="btn bts" onclick="cm('mhq-inst')">Cancelar</button><button class="btn btd write-action" onclick="saveInstHQ()">Registrar</button></div>
   </div>
 </div>
@@ -871,6 +877,9 @@ const db = firebase.database();
           <div class="f2">
             <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="ing-hprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
             <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="ing-hrec" placeholder="Acción recomendada…"></div>
+          <div class="f2">
+            <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="ing-rhaviso" placeholder="ej. AVS-2026-001"></div>
+            <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="ing-rhestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
           </div>
           <button class="btn bts" style="align-self:flex-end" onclick="addIngHI()">Agregar Hallazgo</button>
         </div>
@@ -895,6 +904,9 @@ const db = firebase.database();
       </div>
       <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="ing-rhdesc"></textarea></div>
       <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="ing-rhrec" placeholder="Acción recomendada…"></div>
+    <div class="f2">
+  <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="ing-rhaviso" placeholder="ej. AVS-2026-001"></div>
+  <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="ing-rhestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
     </div>
     <div class="mftr"><button class="btn bts" onclick="cm('mhq-ing')">Cancelar</button><button class="btn btd write-action" onclick="saveIngHQ()">Registrar</button></div>
   </div>
@@ -1482,7 +1494,7 @@ function saveInstHQ(){
   if(!tag||!desc){alert('TAG y descripción obligatorios');return;}
   const aId=document.getElementById('inst-rharea').value, area=INST_AREAS.find(a=>a.id===aId)||{};
   const hid='h'+Date.now();
-  INST_HR.child(hid).set({id:hid,tag,area:aId,areaName:area.name||aId,tipo:document.getElementById('inst-rhtipo').value,prio:document.getElementById('inst-rhprio').value,desc,rec:document.getElementById('inst-rhrec').value.trim(),tec:document.getElementById('inst-rhtec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false});
+  INST_HR.child(hid).set({id:hid,tag,area:aId,areaName:area.name||aId,tipo:document.getElementById('inst-rhtipo').value,prio:document.getElementById('inst-rhprio').value,desc,rec:document.getElementById('inst-rhrec').value.trim(),tec:document.getElementById('inst-rhtec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false,aviso:document.getElementById('inst-rhaviso').value.trim(),estadoAviso:document.getElementById('inst-rhestadoav').value});
   cm('mhq-inst');
 }
 
@@ -1537,7 +1549,7 @@ function saveIngHQ(){
   if(!tag||!desc){alert('TAG y descripción obligatorios');return;}
   const aId=document.getElementById('ing-rharea').value, tmpl=ING_TEMPLATE.find(t=>t.id===aId)||{};
   const hid='h'+Date.now();
-  ING_HR.child(hid).set({id:hid,tag,area:aId,areaName:tmpl.name||aId,tipo:document.getElementById('ing-rhtipo').value,prio:document.getElementById('ing-rhprio').value,desc,rec:document.getElementById('ing-rhrec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false});
+  ING_HR.child(hid).set({id:hid,tag,area:aId,areaName:tmpl.name||aId,tipo:document.getElementById('ing-rhtipo').value,prio:document.getElementById('ing-rhprio').value,desc,rec:document.getElementById('ing-rhrec').value.trim(),month:cm_val,fecha:new Date().toISOString().split('T')[0],ts:new Date().toLocaleString('es-CO'),resuelto:false,aviso:document.getElementById('ing-rhaviso').value.trim(),estadoAviso:document.getElementById('ing-rhestadoav').value});
   cm('mhq-ing');
 }
 
@@ -1579,6 +1591,7 @@ function hallCard(h, discipline) {
       <div style="font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:5px">${h.desc}</div>
       ${h.rec?`<div style="font-size:11px;color:var(--grn);margin-bottom:4px">→ ${h.rec}</div>`:''}
       ${h.tec?`<div style="font-size:10px;color:var(--t3)">Técnico: ${h.tec}</div>`:''}
+      ${h.aviso?`<div style="margin-top:4px;display:flex;gap:6px;align-items:center"><span style="font-family:var(--fm);font-size:9px;background:var(--wnb);color:var(--wn);padding:2px 8px;border-radius:10px;border:1px solid rgba(181,96,10,.3)">SAP: ${h.aviso}</span><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">${h.estadoAviso||''}</span></div>`:''}
     </div>
   </div>`;
 }
