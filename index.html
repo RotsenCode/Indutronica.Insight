@@ -531,6 +531,10 @@ const db = firebase.database();
         <span class="si-icon">📞</span>
         <span class="si-txt">Atenciones Llamado</span>
         <span class="si-badge" id="sb-ing-a-cnt">—</span>
+      <button class="sb-item" id="sbi-ing-cap" onclick="sw('ing-cap')">
+        <span class="si-icon">🎓</span>
+        <span class="si-txt">Capacitaciones</span>
+        <span class="si-badge" id="sb-ing-cap-cnt">0/2</span>  
       </button>
     </div>
 
@@ -779,6 +783,29 @@ const db = firebase.database();
       </div>
     </div>
 
+ <!-- ══════ ING CAPACITACIONES ══════ -->
+<div class="view" id="view-ing-cap">
+  <div class="rhdr">
+    <div>
+      <div class="rtit">Capacitaciones — <span class="ing">Ingeniería</span></div>
+      <div style="font-family:var(--fm);font-size:10px;color:var(--t3);margin-top:4px">Meta mensual: 2 capacitaciones</div>
+    </div>
+    <button class="badd ing-btn no-print" onclick="oCapModal()">+ Nueva Capacitación</button>
+  </div>
+  <div style="padding:12px 24px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:12px">
+    <div style="flex:1;background:var(--bg2);border-radius:10px;height:8px;overflow:hidden">
+      <div id="cap-pgf" style="height:100%;background:linear-gradient(90deg,var(--ing),var(--ing2));border-radius:10px;transition:width .6s;width:0%"></div>
+    </div>
+    <span id="cap-pgct" style="font-family:var(--fm);font-size:11px;color:var(--ing);font-weight:500;min-width:60px">0 / 2</span>
+  </div>
+  <div style="padding:12px 24px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--bdr)">
+    <div class="kc" style="min-width:90px"><div class="kl">Total</div><div class="kv" id="cap-tot">0</div><div class="ks2">este mes</div></div>
+    <div class="kc" style="min-width:90px"><div class="kl">Realizadas</div><div class="kv" style="color:var(--ok)" id="cap-real">0</div><div class="ks2">completadas</div></div>
+    <div class="kc" style="min-width:90px"><div class="kl">Participantes</div><div class="kv" style="color:var(--ing)" id="cap-part">0</div><div class="ks2">total mes</div></div>
+    <div class="kc" style="min-width:90px"><div class="kl">Horas</div><div class="kv" style="color:var(--ing2)" id="cap-hrs">0</div><div class="ks2">capacitación</div></div>
+  </div>
+  <div class="aten-list" id="cap-list"></div>
+</div>   
   </main>
 </div>
 
@@ -944,6 +971,28 @@ const db = firebase.database();
   </div>
 </div>
 
+ <!-- ═════ MODAL: CAPACITACIÓN ═════ -->
+<div class="mov" id="mc-cap">
+  <div class="mdl">
+    <div class="mhdr"><div class="mtit">🎓 Nueva Capacitación</div><button class="mclose" onclick="cm('mc-cap')">✕</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Tema</label><input class="fi" id="cap-ftema" placeholder="Tema de la capacitación"></div>
+      <div class="f2">
+        <div class="fg"><label class="fl">Expositor</label><input class="fi" id="cap-fexp" placeholder="Nombre del expositor"></div>
+        <div class="fg"><label class="fl">Modalidad</label><select class="fs" id="cap-fmod"><option value="Presencial">Presencial</option><option value="Virtual">Virtual</option></select></div>
+      </div>
+      <div class="f3">
+        <div class="fg"><label class="fl">Fecha</label><input class="fi" type="date" id="cap-ffec"></div>
+        <div class="fg"><label class="fl">Duración (horas)</label><input class="fi" type="number" id="cap-fdur" min="0.5" step="0.5" placeholder="ej. 2"></div>
+        <div class="fg"><label class="fl">Participantes</label><input class="fi" type="number" id="cap-fpart" min="1" placeholder="ej. 8"></div>
+      </div>
+      <div class="fg"><label class="fl">Estado</label><select class="fs" id="cap-fest"><option value="Realizada">Realizada</option><option value="Programada">Programada</option><option value="Cancelada">Cancelada</option></select></div>
+      <div class="fg"><label class="fl">Observaciones</label><textarea class="fta" id="cap-fobs" placeholder="Temas tratados, conclusiones, materiales entregados…"></textarea></div>
+    </div>
+    <div class="mftr"><button class="btn bts" onclick="cm('mc-cap')">Cancelar</button><button class="btn bting" onclick="saveCap()">Guardar</button></div>
+  </div>
+</div>
+  
 <script>
 /* ═══════════════════════════════════════════════════
    CONSTANTS
@@ -1026,7 +1075,7 @@ const fs = (ref,d) => { sync('sy'); return ref.set(d).then(()=>sync('on')).catch
 /* ═══════════════════════════════════════════════════
    VIEW SWITCHING
 ═══════════════════════════════════════════════════ */
-const ALL_VIEWS = ['dash','inst-kanban','inst-hall','inst-rep','ing-kanban','ing-hall','ing-rep','ing-aten'];
+const ALL_VIEWS = ['dash','inst-kanban','inst-hall','inst-rep','ing-kanban','ing-hall','ing-rep','ing-aten','ing-cap'];
 function sw(v) {
   ALL_VIEWS.forEach(id => {
     document.getElementById('view-'+id).classList.toggle('active', id===v);
@@ -1051,6 +1100,7 @@ function renderView(v) {
   else if(v==='ing-hall') rIngHall();
   else if(v==='ing-rep') rIngRep();
   else if(v==='ing-aten') rAten();
+  else if(v==='ing-cap'){listenCap();
 }
 function activeView() {
   return ALL_VIEWS.find(id=>document.getElementById('view-'+id).classList.contains('active'));
@@ -1670,7 +1720,78 @@ function saveAten(){
   });
   cm('mc-aten');
 }
-
+/* ═══ CAPACITACIONES ═══ */
+let CAP_R;
+function listenCap(){
+  if(CAP_R)CAP_R.off();
+  CAP_R=db.ref('ni_month/'+cm_val+'/ingenieria/capacitaciones');
+  CAP_R.on('value',s=>{rCap(s.val()||{});});
+}
+function rCap(data){
+  const ca=Object.values(data).sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+  const real=ca.filter(c=>c.estado==='Realizada');
+  const tot=ca.length,hrs=ca.reduce((a,c)=>a+(+c.dur||0),0);
+  const part=ca.reduce((a,c)=>a+(+c.part||0),0);
+  const pct=Math.min(Math.round(real.length/2*100),100);
+  const setEl=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setEl('cap-tot',tot);setEl('cap-real',real.length);setEl('cap-part',part);setEl('cap-hrs',hrs);
+  const pg=document.getElementById('cap-pgf');if(pg)pg.style.width=pct+'%';
+  setEl('cap-pgct',real.length+' / 2');
+  const sb=document.getElementById('sb-ing-cap-cnt');if(sb)sb.textContent=real.length+'/2';
+  const l=document.getElementById('cap-list');if(!l)return;
+  if(!ca.length){
+    l.innerHTML='<div class="aten-empty"><div class="aten-empty-icon">🎓</div><div class="aten-empty-txt">Sin capacitaciones — '+mkL(cm_val)+'</div></div>';
+    return;
+  }
+  const estCol={Realizada:'var(--ok)',Programada:'var(--wn)',Cancelada:'var(--err)'};
+  const estBg={Realizada:'var(--okb)',Programada:'var(--wnb)',Cancelada:'var(--errb)'};
+  l.innerHTML=ca.map((c,i)=>`<div class="aten-card">
+    <div class="aten-stripe" style="background:${estCol[c.estado]||'var(--ing)'}"></div>
+    <div class="aten-body">
+      <div class="aten-top">
+        <div>
+          <div class="aten-num">Capacitación #${ca.length-i}</div>
+          <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--navy);margin-top:2px">${c.tema||'—'}</div>
+        </div>
+        <div class="aten-fecha">${c.fecha||'—'}</div>
+      </div>
+      <div class="aten-desc">Expositor: ${c.exp||'—'} · ${c.modalidad||''}</div>
+      ${c.obs?`<div style="font-size:11px;color:var(--t2);margin-bottom:6px;line-height:1.4">${c.obs}</div>`:''}
+      <div class="aten-meta">
+        <span class="aten-pill" style="background:${estBg[c.estado]};color:${estCol[c.estado]};border:1px solid ${estCol[c.estado]}">${c.estado||'—'}</span>
+        ${c.part?`<span class="aten-pill aten-sys">👥 ${c.part} participantes</span>`:''}
+        ${c.dur?`<span class="aten-pill aten-sys">⏱ ${c.dur} h</span>`:''}
+        <span class="aten-pill" style="background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)">${c.modalidad||''}</span>
+      </div>
+    </div>
+  </div>`).join('');
+}
+function oCapModal(){
+  ['cap-ftema','cap-fexp','cap-fobs'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('cap-fpart').value='';
+  document.getElementById('cap-fdur').value='';
+  document.getElementById('cap-ffec').value=new Date().toISOString().split('T')[0];
+  document.getElementById('cap-fmod').value='Presencial';
+  document.getElementById('cap-fest').value='Realizada';
+  document.getElementById('mc-cap').classList.add('open');
+}
+function saveCap(){
+  const tema=document.getElementById('cap-ftema').value.trim();
+  if(!tema){alert('El tema es obligatorio');return;}
+  const cid='cap'+Date.now();
+  db.ref('ni_month/'+cm_val+'/ingenieria/capacitaciones/'+cid).set({
+    id:cid,tema,exp:document.getElementById('cap-fexp').value.trim(),
+    modalidad:document.getElementById('cap-fmod').value,
+    fecha:document.getElementById('cap-ffec').value,
+    dur:parseFloat(document.getElementById('cap-fdur').value)||0,
+    part:parseInt(document.getElementById('cap-fpart').value)||0,
+    estado:document.getElementById('cap-fest').value,
+    obs:document.getElementById('cap-fobs').value.trim(),
+    month:cm_val,ts:new Date().toLocaleString('es-CO')
+  });
+  cm('mc-cap');
+}
+  
 /* ═══════════════════════════════════════════════════
    REPORTES
 ═══════════════════════════════════════════════════ */
