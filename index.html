@@ -1100,7 +1100,7 @@ function renderView(v) {
   else if(v==='ing-hall') rIngHall();
   else if(v==='ing-rep') rIngRep();
   else if(v==='ing-aten') rAten();
-  else if(v==='ing-cap'){listenCap();
+  else if(v==='ing-cap'){listenCap();}
 }
 function activeView() {
   return ALL_VIEWS.find(id=>document.getElementById('view-'+id).classList.contains('active'));
