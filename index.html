@@ -1281,24 +1281,8 @@ function rDash() {
     </tr>`;
   }).join('');
   document.getElementById('dash-ptbl').innerHTML =
-    `<thead><tr><th>Equipo</th><th>Tipo</th><th>Estado</th><th>Fecha</th><th>Ing.</th><th>Observaciones</th><th>Hall.</th></tr></thead><tbody>${ingRows}</tbody>`;
-
-  /* -- Atenciones -- */
-  const atnArr=Object.values(ingAtens);
-  const atnTarde=atnArr.filter(a=>a.tarde==='si').length;
-  document.getElementById('gbv-aten-dash').textContent=atnArr.length;
-  document.getElementById('gda2-dash').textContent=atnTarde+' demoradas';
-  setTimeout(()=>drawG('cva2-dash',atnArr.length,Math.max(atnArr.length,10),'#9b1c1c'),30);
-
-  /* -- Capacitaciones -- */
-  db.ref('ni_month/'+cm_val+'/ingenieria/capacitaciones').get().then(s=>{
-    const capArr=s.val()?Object.values(s.val()):[];
-    const capReal=capArr.filter(c=>c.estado==='Realizada').length;
-    document.getElementById('gbv-cap-dash').textContent=capReal;
-    document.getElementById('gdcp-dash').textContent=capReal+' de 2 meta mensual';
-    setTimeout(()=>drawG('cvcp-dash',capReal,2,'#9333ea'),30);
-  });
-}
+  `<thead><tr><th>Área</th><th>Act.</th><th>Instr.</th><th>Estado</th><th>Fecha</th><th>Técnico</th><th>Progreso</th><th>Hall.</th></tr></thead><tbody>${rows}</tbody>`;
+  
   /* -- INGENIERÍA -- */
   const gCA=Object.values(ingCards);
   const gDone=gCA.filter(c=>c.status==='C'||c.status==='H');
