@@ -845,12 +845,11 @@ const db = firebase.database();
   <div class="f2">
      <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="inst-rhaviso" placeholder="ej. AVS-2026-001"></div>
      <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="inst-rhestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
-  </div>
-    </div>    
+  </div>   
     <div class="mftr"><button class="btn bts" onclick="cm('mhq-inst')">Cancelar</button><button class="btn btd write-action" onclick="saveInstHQ()">Registrar</button></div>
   </div>
 </div>
-
+  
 <!-- ═════ MODAL: ING EJECUCIÓN ═════ -->
 <div class="mov" id="mc-ing">
   <div class="mdl wide">
@@ -878,7 +877,6 @@ const db = firebase.database();
           <div class="f2">
             <div class="fg"><label class="fl">Prioridad</label><select class="fs" id="ing-hprio"><option value="Alta">Alta</option><option value="Media">Media</option><option value="Baja">Baja</option></select></div>
             <div class="fg"><label class="fl">Recomendación</label><input class="fi" id="ing-hrec" placeholder="Acción recomendada…"></div>
-          </div>
           <div class="f2">
             <div class="fg"><label class="fl">N° Aviso SAP</label><input class="fi" id="ing-haviso" placeholder="ej. AVS-2026-001"></div>
             <div class="fg"><label class="fl">Estado Aviso</label><select class="fs" id="ing-hestadoav"><option value="Creado">Creado</option><option value="Pendiente">Pendiente</option></select></div>
