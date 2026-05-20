@@ -606,7 +606,7 @@ const db = firebase.database();
         <div class="krow" id="dash-ing-kpis"></div>
 
         <!-- 3 gauges Ingeniería -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
           <div class="gauge-block">
             <div class="gauge-block-title">
               Servidores
@@ -635,34 +635,7 @@ const db = firebase.database();
        </div>
       </div>
     </div>  
-    <div class="gauge-block">
-     <div class="gauge-block-title">
-      Atenciones
-      <span class="gbt-pill" style="background:var(--errb);color:var(--err);border:1px solid rgba(155,28,28,.2)">Llamados</span>
-    </div>
-    <div class="gpair"><div class="gwrap">
-      <div class="gsub">Este mes</div>
-      <canvas id="cva2-dash" width="160" height="96"></canvas>
-      <div class="gbv" id="gbv-aten-dash">0</div>
-      <div class="gdl" style="color:var(--err)" id="gda2-dash">0 demoradas</div>
-    </div></div>
   </div>
-  <div class="gauge-block">
-    <div class="gauge-block-title">
-      Capacitaciones
-      <span class="gbt-pill" style="background:var(--ingb);color:var(--ing);border:1px solid rgba(107,33,168,.2)">Meta: 2</span>
-    </div>
-    <div class="gpair"><div class="gwrap">
-      <div class="gsub">Realizadas este mes</div>
-      <canvas id="cvcp-dash" width="160" height="96"></canvas>
-      <div class="gbv" id="gbv-cap-dash">0</div>
-      <div class="gdl ing-color" id="gdcp-dash">meta: 2 mensuales</div>
-    </div></div>
-    </div>
-      </div>
-    </div>
-  </div>
-</div>
 
         <!-- Tabla progreso Ingeniería -->
         <div class="dc">
@@ -1294,8 +1267,7 @@ function rDash() {
     kpiCard('Completados',gCC,gPct+'% del total','var(--ing)')+
     kpiCard('Hallazgos',hcIng,ml,'var(--err)')+
     kpiCard('Atenciones',atnCnt,ml,'var(--ing2)');
-    kpiCard('Capacitaciones',capReal2+'/2','meta mensual','var(--ing)');
-
+    
   const srvItems=gCA.filter(c=>c.cat==='SRV');
   const cliItems=gCA.filter(c=>c.cat==='CLI');
   const srvDone=srvItems.filter(c=>c.status==='C'||c.status==='H').length;
@@ -1332,21 +1304,6 @@ function rDash() {
 
 function kpiCard(label, value, sub, col) {
   return `<div class="kc"><div class="kl">${label}</div><div class="kv"${col?` style="color:${col}"`:''}>${value}</div><div class="ks2">${sub}</div></div>`;
-/* -- Atenciones -- */
-  const atnArr=Object.values(ingAtens);
-  const atnTarde=atnArr.filter(a=>a.tarde==='si').length;
-  document.getElementById('gbv-aten-dash').textContent=atnArr.length;
-  document.getElementById('gda2-dash').textContent=atnTarde+' demoradas';
-  setTimeout(()=>drawG('cva2-dash',atnArr.length,Math.max(atnArr.length,10),'#9b1c1c'),30);
-
-  /* -- Capacitaciones -- */
-  db.ref('ni_month/'+cm_val+'/ingenieria/capacitaciones').get().then(s=>{
-    const capArr=s.val()?Object.values(s.val()):[];
-    const capReal=capArr.filter(c=>c.estado==='Realizada').length;
-    document.getElementById('gbv-cap-dash').textContent=capReal;
-    document.getElementById('gdcp-dash').textContent=capReal+' de 2 meta mensual';
-    setTimeout(()=>drawG('cvcp-dash',capReal,2,'#9333ea'),30);
-  });
 }
 
 /* ═══════════════════════════════════════════════════
