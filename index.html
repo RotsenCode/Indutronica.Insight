@@ -1466,7 +1466,7 @@ function onInstASel() {
 function addInstHI() {
   const tag=document.getElementById('inst-htag').value.trim(), desc=document.getElementById('inst-hdesc').value.trim();
   if(!tag||!desc){alert('TAG y descripción son obligatorios');return;}
-  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('inst-hrec').value.trim(),aviso:document.getElementById('inst-haviso').value.trim(),estadoAviso:document.getElementById('inst-hestadoav').value});
+  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('inst-hrec').value.trim()});
     ['inst-htag','inst-hdesc','inst-hrec'].forEach(i=>document.getElementById(i).value='');
   rInstHlistM();
 }
@@ -1521,7 +1521,7 @@ function onIngASel(){
 function addIngHI(){
   const tag=document.getElementById('ing-htag').value.trim(), desc=document.getElementById('ing-hdesc').value.trim();
   if(!tag||!desc){alert('TAG y descripción son obligatorios');return;}
-  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('ing-hrec').value.trim(),aviso:document.getElementById('ing-haviso').value.trim(),estadoAviso:document.getElementById('inst-hestadoav').value});
+  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('ing-hrec').value.trim()});
   ['ing-htag','ing-hdesc','ing-hrec'].forEach(i=>document.getElementById(i).value='');
   rIngHlistM();
 }
