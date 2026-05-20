@@ -1521,7 +1521,7 @@ function onIngASel(){
 function addIngHI(){
   const tag=document.getElementById('ing-htag').value.trim(), desc=document.getElementById('ing-hdesc').value.trim();
   if(!tag||!desc){alert('TAG y descripción son obligatorios');return;}
-  instTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('inst-htipo').value,desc,prio:document.getElementById('inst-hprio').value,rec:document.getElementById('ing-hrec').value.trim()});
+  ingTempH.push({id:'nh'+Date.now(),tag,tipo:document.getElementById('ing-htipo').value,desc,prio:document.getElementById('ing-hprio').value,rec:document.getElementById('ing-hrec').value.trim(),aviso:document.getElementById('ing-haviso').value.trim(),estadoAviso:document.getElementById('ing-hestadoav').value});
   ['ing-htag','ing-hdesc','ing-hrec'].forEach(i=>document.getElementById(i).value='');
   rIngHlistM();
 }
