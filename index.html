@@ -1879,10 +1879,10 @@ setInterval(tick,1000); tick();
 
 /* ═══════════════════════════════════════════════════
    ROLE / PIN SYSTEM
-   Roles: admin (PIN 1234) | tecnico (PIN 5678) | lectura (no PIN)
+   Roles: admin (PIN 1234) | tecnico (PIN 5678) | lectura (9012)
    PINs stored only in memory — sessionStorage saves role after login.
 ═══════════════════════════════════════════════════ */
-const ROLE_PINS = { admin:'1941', tecnico:'1969', lectura:null };
+const ROLE_PINS = { admin:'1941', tecnico:'1969', lectura:'1986' };
 const ROLE_LABELS = { admin:'ADMIN', tecnico:'TÉCNICO', lectura:'SOLO LECTURA' };
 const ROLE_BADGE_CLS = { admin:'admin', tecnico:'tecnico', lectura:'lectura' };
 // Which actions each role can do: 'write' = create/edit, 'admin' = everything
